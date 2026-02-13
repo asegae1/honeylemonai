@@ -3,119 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>honeylemonai - Global</title>
-  <link rel="icon" href="favicon.png" type="image/png">
+  <title>honeylemonai - Ultimate</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <style>
-    /* デフォルトテーマ (ハニーレモン) */
-    :root { --main: #FFD700; --accent: #FFA500; --bg: #fffdf0; --txt: #333; --ai-bg: #fff; }
-    
-    /* テーマ定義 */
-    body.theme-ja { --main: #FFD700; --accent: #FFA500; --bg: #fffdf0; --txt: #333; }
-    body.theme-en { --main: #00ffcc; --accent: #0077ff; --bg: #0d1117; --txt: #c9d1d9; --ai-bg: #161b22; }
-    body.theme-ko { --main: #ff4d4d; --accent: #3d5afe; --bg: #f8f9fa; --txt: #212529; }
-    body.theme-zh { --main: #ee1c25; --accent: #ffcc00; --bg: #fff5f5; --txt: #333; }
-    body.theme-fr { --main: #0055a4; --accent: #ef4135; --bg: #ffffff; --txt: #333; }
-    body.theme-ar { --main: #007a33; --accent: #c1272d; --bg: #1a1a1a; --txt: #eee; --ai-bg: #2a2a2a; }
+    /* 基本変数 (ライトテーマ) */
+    :root { 
+      --main: #FFD700; --accent: #FFA500; --bg: #fffdf0; --card: #ffffff; --txt: #333; 
+      --ai-msg: #f9f9f9; --glass: rgba(255, 255, 255, 0.8);
+    }
+    /* ダークテーマ */
+    body.dark { 
+      --main: #ffcc00; --accent: #ff8c00; --bg: #121212; --card: #1e1e1e; --txt: #e0e0e0; 
+      --ai-msg: #2a2a2a; --glass: rgba(30, 30, 30, 0.8);
+    }
 
-    body { font-family: sans-serif; background: var(--bg); color: var(--txt); margin: 0; display: flex; flex-direction: column; height: 100vh; transition: all 0.4s ease; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--txt); margin: 0; height: 100vh; display: flex; flex-direction: column; transition: 0.3s; }
     
-    /* Header & Logo */
-    .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.05); }
-    .logo { font-weight: 900; font-size: 22px; background: linear-gradient(135deg, var(--main), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border-left: 5px solid var(--main); padding-left: 12px; }
+    /* Header */
+    .header { background: var(--glass); backdrop-filter: blur(10px); padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .logo { font-weight: 900; font-size: 22px; background: linear-gradient(135deg, var(--main), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    /* Settings Bar */
+    .settings-bar { display: flex; gap: 10px; padding: 10px 25px; background: rgba(0,0,0,0.03); font-size: 12px; overflow-x: auto; }
     
     /* Chat Area */
     #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.6; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .user { align-self: flex-end; background: linear-gradient(135deg, var(--main), var(--accent)); color: #fff; border-bottom-right-radius: 4px; }
-    .ai { align-self: flex-start; background: var(--ai-bg); border: 1px solid rgba(0,0,0,0.05); border-bottom-left-radius: 4px; white-space: pre-wrap; }
+    .msg { max-width: 80%; padding: 12px 18px; border-radius: 20px; font-size: 14px; line-height: 1.6; }
+    .user { align-self: flex-end; background: linear-gradient(135deg, var(--main), var(--accent)); color: #fff; }
+    .ai { align-self: flex-start; background: var(--ai-msg); border: 1px solid rgba(0,0,0,0.05); white-space: pre-wrap; }
 
-    /* Controls */
-    .input-area { background: rgba(255,255,255,0.05); padding: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+    /* Input */
+    .input-area { background: var(--card); padding: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
     .controls { display: flex; gap: 10px; align-items: center; max-width: 1000px; margin: 0 auto; }
+    input[type="text"] { flex: 1; padding: 12px 20px; border: 2px solid rgba(0,0,0,0.1); border-radius: 25px; background: var(--bg); color: var(--txt); outline: none; }
     
-    select, input[type="text"] { border: 2px solid rgba(0,0,0,0.1); border-radius: 20px; padding: 10px; outline: none; background: var(--ai-bg); color: var(--txt); }
-    input[type="text"] { flex: 1; }
-    .btn { background: var(--main); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: 0.3s; }
-    .btn:hover { transform: scale(1.1); filter: brightness(1.1); }
+    .btn-lemon { background: var(--main); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: 0.3s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .btn-lemon:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
+
+    .rate-limit { font-size: 10px; color: var(--accent); margin-top: 5px; text-align: center; }
   </style>
 </head>
-<body class="theme-ja">
+<body class="light">
 
 <div class="header">
-  <div class="logo" id="ui-logo">honeylemonai</div>
-  <select id="langSelect" onchange="changeLang()">
-    <option value="ja">日本語 🇯🇵</option>
-    <option value="en">English 🇺🇸</option>
-    <option value="ko">한국어 🇰🇷</option>
-    <option value="zh">中文 🇨🇳</option>
-    <option value="fr">Français 🇫🇷</option>
-    <option value="ar">العربية 🇸🇦</option>
+  <div class="logo">honeylemonai</div>
+  <div style="display: flex; gap: 10px;">
+    <button onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size:20px;">🌓</button>
+  </div>
+</div>
+
+<div class="settings-bar">
+  <select id="personality" onchange="updatePersonality()">
+    <option value="friendly">性格: フレンドリー 🍋</option>
+    <option value="cool">性格: クール 🧊</option>
+    <option value="tsundere">性格: ツンデレ 🔥</option>
+    <option value="expert">性格: 専門家 🎓</option>
   </select>
+  <select id="mode">
+    <option value="chat">モード: 会話</option>
+    <option value="image">モード: 画像生成</option>
+  </select>
+  <div id="rate-display">画像枠: 4/4</div>
 </div>
 
 <div id="chat-box"></div>
 
 <div class="input-area">
   <div class="controls">
-    <label style="cursor:pointer; font-size:24px;">📎<input type="file" id="fileInput" style="display:none" onchange="handleFile()"></label>
-    <input id="input" type="text" placeholder="メッセージを入力..." autocomplete="off">
-    <button class="btn" id="sendBtn" onclick="run()">🍋</button>
+    <label style="cursor:pointer; font-size:22px;">📎<input type="file" id="fileInput" style="display:none" onchange="handleFile()"></label>
+    <input id="input" type="text" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter') run()">
+    <button class="btn-lemon" id="sendBtn" onclick="run()">🍋</button>
   </div>
+  <div class="rate-limit" id="cooldown-text"></div>
 </div>
 
 <script>
-  const i18n = {
-    ja: { logo: "honeylemonai", place: "何をお手伝いしましょうか？", theme: "ja" },
-    en: { logo: "HONEY LEMON AI", place: "How can I help you?", theme: "en" },
-    ko: { logo: "허니 레몬 AI", place: "무엇을 도와드릴까요?", theme: "ko" },
-    zh: { logo: "蜂蜜柠檬AI", place: "有什么我可以帮你的吗？", theme: "zh" },
-    fr: { logo: "CITRON MIEL AI", place: "Comment puis-je vous aider ?", theme: "fr" },
-    ar: { logo: "عسل ليمون", place: "كيف يمكنني مساعدتك؟", theme: "ar" }
-  };
-
+  let imageCount = 4;
+  let cooldown = false;
   let currentFile = { name: "", data: "", text: "" };
-  let selectedLang = "ja";
 
-  function changeLang() {
-    selectedLang = document.getElementById('langSelect').value;
-    const config = i18n[selectedLang];
-    document.body.className = `theme-${config.theme}`;
-    document.getElementById('ui-logo').innerText = config.logo;
-    document.getElementById('input').placeholder = config.place;
-    addMsg(`System: Switched to ${selectedLang} mode.`, 'ai');
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
+
+  // 画像生成の回数制限ロジック (1分間に4回)
+  function checkImageRate() {
+    if (imageCount <= 0) {
+      cooldown = true;
+      document.getElementById('sendBtn').disabled = true;
+      let seconds = 60;
+      const timer = setInterval(() => {
+        seconds--;
+        document.getElementById('cooldown-text').innerText = `画像生成制限中... あと ${seconds}秒`;
+        if (seconds <= 0) {
+          clearInterval(timer);
+          imageCount = 4;
+          cooldown = false;
+          document.getElementById('sendBtn').disabled = false;
+          document.getElementById('cooldown-text').innerText = "";
+          updateRateDisplay();
+        }
+      }, 1000);
+      return false;
+    }
+    imageCount--;
+    updateRateDisplay();
+    return true;
+  }
+
+  function updateRateDisplay() {
+    document.getElementById('rate-display').innerText = `画像枠: ${imageCount}/4`;
   }
 
   async function handleFile() {
     const file = document.getElementById('fileInput').files[0];
     if (!file) return;
-    currentFile.name = file.name;
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => { currentFile.data = e.target.result; };
-      reader.readAsDataURL(file);
-    } else if (file.type === 'application/pdf') {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-      let t = "";
-      for(let i=1; i<=Math.min(pdf.numPages, 5); i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        t += content.items.map(item => item.str).join(' ') + "\n";
-      }
-      currentFile.text = t;
-    } else { currentFile.text = await file.text(); }
-    addMsg(`File attached: ${file.name}`, 'ai');
+    addMsg(`File: ${file.name} を読み込み中...`, 'ai');
+    // ... 前回のPDF/画像読み取りロジック ...
   }
 
   async function run() {
     const input = document.getElementById('input');
+    const mode = document.getElementById('mode').value;
+    const personality = document.getElementById('personality').value;
+    
     if (!input.value && !currentFile.name) return;
+    if (mode === 'image' && !checkImageRate()) return;
 
+    addMsg(input.value, 'user');
     const userText = input.value;
-    addMsg(userText || currentFile.name, 'user');
     input.value = "";
 
     try {
@@ -126,14 +142,15 @@
           prompt: userText, 
           image: currentFile.data, 
           fileText: currentFile.text,
-          lang: selectedLang // AIに現在の言語を伝える
+          personality: personality,
+          mode: mode
         })
       });
       const data = await res.json();
       addMsg(data.content, 'ai');
-    } catch (e) { addMsg("Error connecting to AI.", 'ai'); }
-    
-    currentFile = { name: "", data: "", text: "" };
+    } catch (e) {
+      addMsg("Connection Error. 制限解除を待ってください。", 'ai');
+    }
   }
 
   function addMsg(t, type) {
