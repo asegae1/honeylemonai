@@ -15,26 +15,34 @@ function init() {
 
 async function run() {
     const input = document.getElementById('input');
-    const lang = document.getElementById('langSelect').value;
-    const model = window.HoneyLemonModels[document.getElementById('modelSelect').value];
-    const batch = parseInt(document.getElementById('batchSelect').value);
-    
     if (!input.value) return;
     if (!currentId) createNewChat();
 
-    const text = input.value;
-    addMsg(text, 'user');
-    chats[currentId].messages.push({ text, type: 'user' });
+    // --- システム的な設定値の強制取得 ---
+    const userText = input.value;
+    const lang = document.getElementById('langSelect').value; // 言語設定を取得
+    const surface = document.getElementById('personalityInput').value; // 性格設定を取得
+    const modelKey = document.getElementById('modelSelect').value;
+    const model = window.HoneyLemonModels[modelKey];
+    const batch = parseInt(document.getElementById('batchSelect').value);
+
+    addMsg(userText, 'user');
+    chats[currentId].messages.push({ text: userText, type: 'user' });
     input.value = "";
 
-    // 言語設定による分岐
-    const responseBase = lang === 'en' ? "This is a response in English." : "日本語での回答です。";
-
+    // 分裂表示の実行
     for (let i = 0; i < batch; i++) {
-        // PERSONALITY（隠し性格）を考慮したシミュレーション
-        const aiText = `[${model.Models}] ${responseBase}\n設定: ${model.PERSONALITY}`;
-        addMsg(aiText, 'ai');
-        chats[currentId].messages.push({ text: aiText, type: 'ai' });
+        let responseText = "";
+        
+        // システム的条件分岐：言語設定を物理的に反映
+        if (lang === 'en') {
+            responseText = `[${model.Models}] Answer in English mode.\nSetting: ${surface || 'None'}\nCore: ${model.PERSONALITY}`;
+        } else {
+            responseText = `[${model.Models}] 日本語モードでの回答です。\n設定: ${surface || 'なし'}\n核: ${model.PERSONALITY}`;
+        }
+
+        addMsg(responseText, 'ai');
+        chats[currentId].messages.push({ text: responseText, type: 'ai' });
     }
     save();
 }
@@ -67,12 +75,14 @@ function renderHistory() {
     const list = document.getElementById('history-list');
     list.innerHTML = Object.keys(chats).reverse().map(id => `
         <div class="history-item" onclick="loadChat('${id}')">
-            <span>${chats[id].title}</span>
+            <span style="flex:1;">${chats[id].title}</span>
+            <div class="del-link" onclick="deleteChat(event, '${id}')">削除</div>
         </div>
     `).join('');
 }
 
 function loadChat(id) { currentId = id; renderChat(); renderHistory(); }
 function save() { localStorage.setItem('lemon_v3', JSON.stringify(chats)); renderHistory(); }
+function deleteChat(e, id) { e.stopPropagation(); delete chats[id]; if(currentId === id) currentId = null; save(); renderChat(); }
 
 window.onload = init;
