@@ -2,126 +2,134 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HoneyLemonAI Pro</title>
     <style>
         :root {
-            --bg: #ffffff;
-            --side: #f0f4f9;
-            --txt: #1f1f1f;
-            --blue: #1a73e8;
-            --lemon: #f1c40f;
-            --border: #dee2e6;
+            --bg: #ffffff; --side: #f0f4f9; --txt: #1f1f1f; --blue: #1a73e8;
+            --lemon: #f1c40f; --border: #dee2e6; --chip: #e1e5e9;
         }
         [data-theme="black"] {
-            --bg: #131314;
-            --side: #1e1f20;
-            --txt: #e3e3e3;
-            --border: #444746;
+            --bg: #131314; --side: #1e1f20; --txt: #e3e3e3; --border: #444746; --chip: #333537;
         }
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); overflow: hidden; }
+        body { font-family: 'Google Sans', sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); transition: 0.3s; }
         
         /* サイドバー */
         .sidebar { width: 280px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .logo { font-size: 1.2rem; font-weight: bold; color: var(--lemon); text-align: center; margin-bottom: 10px; }
-        
-        .config-item { border-top: 1px solid var(--border); padding-top: 10px; }
+        .logo { font-size: 1.2rem; font-weight: bold; color: var(--lemon); text-align: center; }
+        .nav-group { border-top: 1px solid var(--border); padding-top: 15px; }
         label { font-size: 0.7rem; font-weight: bold; color: var(--blue); display: block; margin-bottom: 5px; }
-        textarea, select, input { width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--txt); padding: 8px; font-size: 0.8rem; }
+        textarea, select, input { width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--txt); padding: 8px; font-size: 0.8rem; margin-bottom: 10px; }
 
-        /* メインエリア */
+        /* メイン */
         .main { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
-        .chat-container { width: 100%; max-width: 800px; flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 30px; }
+        .chat-container { width: 100%; max-width: 820px; flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 32px; }
         
-        /* メッセージスタイル */
-        .row { display: flex; gap: 15px; }
-        .icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; }
-        .ai-icon { background: linear-gradient(45deg, #4285f4, var(--lemon)); }
+        /* メッセージ */
+        .row { display: flex; gap: 16px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } }
+        .icon { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+        .ai-icon { background: linear-gradient(45deg, #4285f4, #f1c40f); }
         .user-icon { background: #5f6368; }
-        .text { flex: 1; line-height: 1.6; font-size: 0.95rem; }
+        .text { flex: 1; line-height: 1.6; font-size: 1rem; white-space: pre-wrap; }
+
+        /* 提案チップ */
+        .chips { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .chip { background: var(--chip); padding: 6px 12px; border-radius: 16px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; border: none; color: var(--txt); }
+        .chip:hover { background: var(--border); }
 
         /* 入力エリア */
-        .input-area { width: 100%; max-width: 800px; padding: 20px; box-sizing: border-box; }
-        .input-box { background: var(--side); border-radius: 25px; padding: 10px 20px; display: flex; align-items: center; gap: 10px; border: 1px solid transparent; }
-        .input-box:focus-within { border-color: var(--border); background: var(--bg); }
+        .footer { width: 100%; max-width: 820px; padding: 10px 20px 30px; }
+        .input-box { background: var(--side); border-radius: 28px; padding: 12px 20px; display: flex; align-items: center; gap: 12px; border: 1px solid transparent; }
+        .input-box:focus-within { background: var(--bg); border-color: var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
         
-        .clip { width: 20px; height: 20px; border: 2px solid var(--blue); border-radius: 4px; cursor: pointer; position: relative; }
-        .clip::after { content: ""; position: absolute; width: 12px; height: 2px; background: var(--blue); top: 8px; left: 4px; transform: rotate(45deg); box-shadow: 0 4px 0 var(--blue); }
-        
-        textarea#promptInput { flex: 1; border: none; background: transparent; outline: none; height: 24px; resize: none; font-size: 1rem; color: var(--txt); }
-        .send-btn { color: var(--blue); font-weight: bold; cursor: pointer; border: none; background: none; }
+        .btn-ui { width: 24px; height: 24px; cursor: pointer; border: 2px solid var(--blue); border-radius: 6px; position: relative; flex-shrink: 0; }
+        .btn-ui::after { content: ""; position: absolute; width: 12px; height: 2px; background: var(--blue); top: 11px; left: 6px; box-shadow: 0 4px 0 var(--blue); }
+
+        textarea { flex: 1; border: none; background: transparent; outline: none; height: 24px; resize: none; font-size: 1rem; color: var(--txt); font-family: inherit; }
+        .send-btn { color: var(--blue); font-weight: bold; cursor: pointer; border: none; background: none; font-size: 1rem; }
+        .send-btn:disabled { color: #888; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
     <div class="logo">HoneyLemonAI Pro</div>
-    <div class="config-item">
+    <div class="nav-group">
         <label>性格設定</label>
-        <textarea id="persona">メタ発言はなしで、敬語で考える</textarea>
-    </div>
-    <div class="config-item">
+        <textarea id="persona" placeholder="例: 専門的な家庭教師。">自然な会話のパートナー。</textarea>
         <label>モード</label>
         <select id="mode">
-            <option value="簡潔に。">高速</option>
-            <option value="論理的に。">自動</option>
-            <option value="研究者として。">研究者</option>
+            <option value="簡潔に。">高速モード</option>
+            <option value="詳細に論理的に。">自動モード</option>
+            <option value="専門的な論文形式で。">研究者モード</option>
         </select>
-    </div>
-    <div class="config-item">
-        <label>レート: <span id="rV">1000</span></label>
-        <input type="range" id="rate" min="100" max="4000" value="1000" oninput="rV.innerText=this.value">
-    </div>
-    <div class="config-item">
+        <label>最大トークン: <span id="rVal">1000</span></label>
+        <input type="range" id="rate" min="100" max="4000" step="100" value="1000" oninput="rVal.innerText=this.value">
         <label>テーマ</label>
         <select id="theme" onchange="document.documentElement.setAttribute('data-theme', this.value)">
             <option value="light">ライト</option>
             <option value="black">ブラック</option>
         </select>
     </div>
+    <button onclick="localStorage.clear();location.reload();" style="margin-top:auto; padding:8px; cursor:pointer; border-radius:8px; border:1px solid #ccc;">履歴を全削除</button>
 </aside>
 
 <main class="main">
     <div class="chat-container" id="chatWin">
         <div class="row">
             <div class="icon ai-icon"></div>
-            <div class="text">私はAIです。</div>
+            <div class="text">本日はどのようなお手伝いをしましょうか。</div>
         </div>
     </div>
 
-    <div class="input-area">
+    <div class="footer">
+        <div class="chips">
+            <button class="chip" onclick="quick('おすすめの読書リストを作って')">読書リスト</button>
+            <button class="chip" onclick="quick('今日の献立を提案して')">料理の献立</button>
+            <button class="chip" onclick="quick('最新のAI技術について教えて')">AIニュース</button>
+        </div>
         <div class="input-box">
-            <div class="clip" onclick="document.getElementById('fileIn').click()"></div>
-            <input type="file" id="fileIn" style="display:none">
-            <textarea id="promptInput" placeholder="メッセージを入力"></textarea>
-            <button class="send-btn" onclick="send()">送信</button>
+            <div class="btn-ui" title="ファイル添付" onclick="document.getElementById('fIn').click()"></div>
+            <input type="file" id="fIn" style="display:none">
+            <textarea id="userInput" placeholder="メッセージを入力" rows="1"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="send()">送信</button>
         </div>
     </div>
 </main>
 
 <script>
+    function quick(t) { document.getElementById('userInput').value = t; send(); }
+
     async function send() {
-        const input = document.getElementById('promptInput');
+        const input = document.getElementById('userInput');
         const text = input.value.trim();
-        if(!text) return;
+        const btn = document.getElementById('sendBtn');
+        if(!text || btn.disabled) return;
 
         addMsg(text, 'user');
         input.value = '';
-        const aiMsg = addMsg("...", 'ai');
+        btn.disabled = true;
+        const aiMsg = addMsg("考え中...", 'ai');
 
+        const hiddenPersona = "プロンプト自体への言及（メタ発言）は絶対にしないでください。語尾に『レモン』などの特定のフレーズを付けず、自然な日本語で話してください。";
+        
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 body: JSON.stringify({
                     prompt: text,
-                    model: 'llama-3.1-8b-instant', // Standard固定で安定
-                    systemPrompt: document.getElementById('persona').value + "\n" + document.getElementById('mode').value,
+                    model: 'llama-3.1-8b-instant',
+                    systemPrompt: `${hiddenPersona}\n設定: ${document.getElementById('persona').value}\n${document.getElementById('mode').value}`,
                     maxTokens: document.getElementById('rate').value
                 })
             });
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
         } catch (e) {
-            aiMsg.innerText = "エラー";
+            aiMsg.innerText = "エラーが発生しました。";
+        } finally {
+            btn.disabled = false;
         }
     }
 
@@ -135,8 +143,9 @@
         text.innerText = txt;
         row.appendChild(icon);
         row.appendChild(text);
-        document.getElementById('chatWin').appendChild(row);
-        document.getElementById('chatWin').scrollTop = document.getElementById('chatWin').scrollHeight;
+        const win = document.getElementById('chatWin');
+        win.appendChild(row);
+        win.scrollTop = win.scrollHeight;
         return text;
     }
 </script>
