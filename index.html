@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>honeylemonai</title>
+    <title>honeylemonai - Groq Studio</title>
     <style>
         :root {
             --main: #FFD700; --bg: #fffdf0; --panel: #ffffff;
@@ -11,52 +11,51 @@
         }
         body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        /* サイドバー */
         .sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
         .logo { padding: 25px; font-size: 20px; font-weight: 900; color: var(--accent); }
         .new-btn { background: var(--main); border: none; padding: 12px; margin: 0 15px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .history-item { background: var(--panel); padding: 10px; margin-bottom: 8px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; cursor: pointer; font-size: 13px; }
-        .del-link { color: #cc0000; font-size: 10px; margin-left: auto; }
-
-        /* メインエリア */
+        
         .main { flex: 1; display: flex; flex-direction: column; }
         .top-nav { background: var(--panel); padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; align-items: flex-end; }
         .field { display: flex; flex-direction: column; gap: 4px; }
         .field label { font-size: 10px; font-weight: bold; color: var(--accent); }
         select, input { padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: #fffdf5; font-size: 12px; outline: none; }
 
-        /* チャット表示 */
         #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 75%; padding: 12px 18px; border-radius: 18px; line-height: 1.5; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .user { align-self: flex-end; background: var(--main); color: #000; border-bottom-right-radius: 4px; }
+        .msg { max-width: 75%; padding: 12px 18px; border-radius: 18px; line-height: 1.5; font-size: 14px; position: relative; }
+        .user { align-self: flex-end; background: var(--main); border-bottom-right-radius: 4px; }
         .ai { align-self: flex-start; background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        
+        /* 画像プレースホルダー */
+        .gen-image { width: 100%; max-width: 300px; height: 300px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-top: 10px; border: 2px dashed #ccc; }
 
-        /* 下部入力 */
-        .input-area { padding: 20px; background: var(--panel); border-top: 1px solid var(--border); display: flex; justify-content: center; }
-        .input-wrap { width: 100%; max-width: 800px; display: flex; gap: 10px; }
-        #input { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ddd; background: #fffdf5; outline: none; }
-        .submit-btn { width: 44px; height: 44px; background: var(--main); border: none; border-radius: 50% 10% 50% 50%; transform: rotate(-15deg); cursor: pointer; }
+        .bottom-bar { padding: 20px; background: var(--panel); border-top: 1px solid var(--border); }
+        .input-wrap { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; }
+        #input { flex: 1; padding: 12px 20px; border-radius: 25px; border: 1px solid #ddd; background: #fffdf5; }
+        .btn { border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .img-btn { width: 44px; height: 44px; background: #f0f0f0; border: 1px solid #ddd; }
+        .submit-btn { width: 44px; height: 44px; background: var(--main); border-radius: 50% 10% 50% 50%; transform: rotate(-15deg); }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="logo">honeylemonai</div>
-        <button class="new-btn" onclick="createNewChat()">新規チャット開始</button>
-        <div id="history-list"></div>
+        <button class="new-btn" onclick="createNewChat()">新規セッション</button>
+        <div id="history-list" style="padding:10px;"></div>
     </div>
     <div class="main">
         <div class="top-nav">
-            <div class="field"><label>モデル</label><select id="modelSelect"></select></div>
-            <div class="field" style="flex:2;"><label>性格設定</label><input type="text" id="personalityInput" placeholder="振る舞いを記述..."></div>
-            <div class="field"><label>長さ: <span id="lenVal">1000</span></label><input type="range" id="lengthSelect" min="1000" max="7500" step="100" value="1000" oninput="document.getElementById('lenVal').innerText=this.value"></div>
-            <div class="field"><label>分裂</label><select id="batchSelect"><option value="1">1倍</option><option value="2">2倍</option><option value="4">4倍</option></select></div>
+            <div class="field"><label>GROQモデル</label><select id="modelSelect"></select></div>
+            <div class="field" style="flex:2;"><label>性格設定</label><input type="text" id="personalityInput" placeholder="性格を指定..."></div>
+            <div class="field"><label>文字数</label><input type="range" id="lengthSelect" min="1000" max="7500" value="1000"></div>
+            <div class="field"><label>分裂</label><select id="batchSelect"><option value="1">1倍</option><option value="2">2倍</option></select></div>
         </div>
         <div id="chat-box"></div>
-        <div class="input-area">
+        <div class="bottom-bar">
             <div class="input-wrap">
-                <input id="input" type="text" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter') run()">
-                <button class="submit-btn" onclick="run()"></button>
+                <button class="btn img-btn" onclick="generateImageRequest()" title="画像生成">画</button>
+                <input id="input" type="text" placeholder="Groqに質問、または画像の説明..." onkeypress="if(event.key==='Enter') run()">
+                <button class="btn submit-btn" onclick="run()"></button>
             </div>
         </div>
     </div>
