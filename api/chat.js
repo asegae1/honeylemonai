@@ -1,5 +1,6 @@
+// api/chat.js
 export default async function handler(req, res) {
-  const { prompt } = JSON.parse(req.body);
+  const { prompt, model } = JSON.parse(req.body);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -7,7 +8,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
+      model: model || "llama-3.3-70b-versatile", // 選択されたモデルを使用
       messages: [{ role: "user", content: prompt }]
     })
   });
