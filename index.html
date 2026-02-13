@@ -15,66 +15,89 @@
 
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--txt); margin: 0; height: 100vh; display: flex; transition: 0.3s; overflow: hidden; }
     
+    /* --- CSS Icons --- */
+    .icon-moon { width: 14px; height: 14px; border-radius: 50%; box-shadow: 4px 4px 0 0 var(--txt); transform: rotate(-15deg); display: inline-block; }
+    .icon-plus { width: 12px; height: 12px; position: relative; display: inline-block; }
+    .icon-plus::before, .icon-plus::after { content: ''; position: absolute; background: var(--txt); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .icon-plus::before { width: 100%; height: 2px; } .icon-plus::after { width: 2px; height: 100%; }
+
+    .icon-trash { width: 12px; height: 14px; border: 2px solid #ff4d4d; border-top: none; position: relative; border-radius: 0 0 2px 2px; }
+    .icon-trash::before { content: ''; position: absolute; top: -4px; left: -2px; width: 16px; height: 2px; background: #ff4d4d; }
+    .icon-trash::after { content: ''; position: absolute; top: -7px; left: 3px; width: 6px; height: 2px; border: 2px solid #ff4d4d; border-bottom: none; }
+
+    .icon-edit { width: 10px; height: 10px; border: 2px solid var(--accent); transform: rotate(45deg); position: relative; }
+    .icon-edit::after { content: ''; position: absolute; bottom: -6px; left: 2px; width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 5px solid var(--accent); }
+
+    .icon-clip { width: 10px; height: 15px; border: 2px solid #888; border-radius: 10px; transform: rotate(45deg); }
+
     /* --- Sidebar --- */
     .sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.05); }
     .sidebar-header { padding: 20px; font-weight: 900; font-size: 20px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
-    .history-list { flex: 1; overflow-y: auto; padding: 10px; }
     
+    .history-list { flex: 1; overflow-y: auto; padding: 10px; }
     .history-item { 
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; font-size: 13px; 
+      padding: 12px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; font-size: 13px; 
       background: rgba(255,255,255,0.3); transition: 0.2s; border: 1px solid transparent;
     }
     .history-item:hover { border-color: var(--main); background: var(--panel); }
     .history-item.active { background: var(--main); color: #fff; }
-    .history-ops button { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px; }
 
-    /* --- Main --- */
+    .btn-op { background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; transition: 0.2s; }
+    .btn-op:hover { background: rgba(0,0,0,0.05); }
+
+    /* --- Main UI --- */
     .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .top-nav { background: var(--panel); padding: 15px 25px; border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 15px rgba(0,0,0,0.03); }
+    .top-nav { background: var(--panel); padding: 15px 25px; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .settings-grid { display: grid; grid-template-columns: 1fr 2fr 1.5fr 0.8fr; gap: 15px; align-items: center; }
-    .label-xs { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; display: block; }
     
-    select, input[type="text"], input[type="range"] { width: 100%; background: var(--bg); color: var(--txt); border: 1.5px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 6px; outline: none; box-sizing: border-box;}
-
     #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
     .msg { padding: 18px; border-radius: var(--radius); font-size: 14px; line-height: 1.7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 85%; }
     .user { align-self: flex-end; background: linear-gradient(135deg, var(--main), var(--accent)); color: white; border-bottom-right-radius: 4px; }
     .ai { align-self: flex-start; background: var(--panel); border-left: 5px solid var(--main); border-bottom-left-radius: 4px; }
 
-    /* --- Code Split View --- */
-    .code-block { 
-      background: var(--code-bg); color: #abb2bf; padding: 15px; border-radius: 10px; 
-      font-family: 'Consolas', monospace; font-size: 13px; overflow-x: auto; margin-top: 10px;
-      border: 1px solid #3e4451; position: relative;
-    }
-    .code-label { position: absolute; top: 0; right: 10px; font-size: 10px; color: #5c6370; }
-
+    .code-block { background: var(--code-bg); color: #abb2bf; padding: 15px; border-radius: 10px; font-family: 'Consolas', monospace; margin-top: 10px; border: 1px solid #3e4451; position: relative; }
+    
     .input-wrapper { background: var(--panel); padding: 20px 40px; border-top: 1px solid rgba(0,0,0,0.05); }
     .input-row { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 15px; }
-    #input { flex: 1; padding: 14px 25px; border-radius: 30px; border: 2px solid var(--bg); background: var(--bg); color: var(--txt); font-size: 15px; }
-    .lemon-btn { background: var(--main); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    #input { flex: 1; padding: 14px 25px; border-radius: 30px; border: 2px solid var(--bg); background: var(--bg); color: var(--txt); }
+    
+    /* 🍋ロゴもCSSで再現 */
+    .lemon-logo { width: 30px; height: 30px; background: var(--main); border-radius: 50% 10% 50% 50%; transform: rotate(-15deg); display: flex; align-items: center; justify-content: center; box-shadow: inset -4px -4px 8px var(--accent); border: none; cursor: pointer; }
   </style>
 </head>
 <body class="light">
 
 <div class="sidebar">
-  <div class="sidebar-header">🍋 honeylemonai <button onclick="document.body.classList.toggle('dark')">🌓</button></div>
-  <div style="padding: 15px;"><button style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--main); font-weight:bold; cursor:pointer;" onclick="createNewChat()">+ New Session</button></div>
+  <div class="sidebar-header">
+    <span>honeylemonai</span>
+    <button class="btn-op" onclick="document.body.classList.toggle('dark')"><div class="icon-moon"></div></button>
+  </div>
+  <div style="padding: 15px;">
+    <button style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--main); font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;" onclick="createNewChat()">
+      <div class="icon-plus"></div> New Session
+    </button>
+  </div>
   <div class="history-list" id="history-list"></div>
 </div>
 
 <div class="main-container">
   <div class="top-nav">
     <div class="settings-grid">
-      <div><span class="label-xs">Language</span><select id="langSelect"><option value="ja">日本語</option><option value="en">English</option></select></div>
-      <div><span class="label-xs">Personality</span><input type="text" id="personalityInput" placeholder="例: 毒舌レモン"></div>
-      <div><span class="label-xs">Length: <span id="lenVal">1000</span></span><input type="range" id="lengthSelect" min="1000" max="7500" step="100" value="1000" oninput="document.getElementById('lenVal').innerText=this.value"></div>
-      <div><span class="label-xs">Batch</span><select id="batchSelect"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>
+      <select id="langSelect"><option value="ja">日本語</option><option value="en">English</option></select>
+      <input type="text" id="personalityInput" placeholder="性格設定">
+      <input type="range" id="lengthSelect" min="1000" max="7500" value="1000">
+      <select id="batchSelect"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select>
     </div>
   </div>
   <div id="chat-box"></div>
-  <div class="input-wrapper"><div class="input-row"><label style="cursor:pointer; font-size:24px;">📎<input type="file" id="fileInput" style="display:none"></label><input id="input" type="text" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter') run()"><button class="lemon-btn" onclick="run()">🍋</button></div></div>
+  <div class="input-wrapper">
+    <div class="input-row">
+      <label style="cursor:pointer;"><div class="icon-clip"></div><input type="file" style="display:none"></label>
+      <input id="input" type="text" placeholder="メッセージを入力...">
+      <button class="lemon-logo" onclick="run()"></button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -85,10 +108,10 @@
     const list = document.getElementById('history-list');
     list.innerHTML = Object.keys(chats).reverse().map(id => `
       <div class="history-item ${id == currentChatId ? 'active' : ''}" onclick="loadChat('${id}')">
-        <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${chats[id].title}</span>
-        <div class="history-ops">
-          <button onclick="renameChat(event, '${id}')">📝</button>
-          <button onclick="deleteChat(event, '${id}')">🗑️</button>
+        <span>${chats[id].title}</span>
+        <div style="display:flex; gap:5px;">
+          <button class="btn-op" onclick="renameChat(event, '${id}')"><div class="icon-edit"></div></button>
+          <button class="btn-op" onclick="deleteChat(event, '${id}')"><div class="icon-trash"></div></button>
         </div>
       </div>
     `).join('');
@@ -97,79 +120,44 @@
   function createNewChat() {
     currentChatId = Date.now();
     chats[currentChatId] = { title: "新しい会話", messages: [] };
-    saveAndRender();
-    renderChat();
+    save(); renderChat();
   }
 
-  function renameChat(e, id) {
-    e.stopPropagation();
-    const newName = prompt("新しいタイトルを入力してください", chats[id].title);
-    if (newName) { chats[id].title = newName; saveAndRender(); }
-  }
-
-  function deleteChat(e, id) {
-    e.stopPropagation();
-    if (confirm("この会話を削除しますか？")) {
-      delete chats[id];
-      if (currentChatId == id) currentChatId = null;
-      saveAndRender();
-      renderChat();
-    }
-  }
-
+  function renameChat(e, id) { e.stopPropagation(); const n = prompt("名前変更", chats[id].title); if(n){chats[id].title=n; save();} }
+  function deleteChat(e, id) { e.stopPropagation(); if(confirm("削除？")){delete chats[id]; if(currentChatId==id)currentChatId=null; save(); renderChat();} }
   function loadChat(id) { currentChatId = id; renderChat(); renderHistory(); }
+  function save() { localStorage.setItem('lemon_chats', JSON.stringify(chats)); renderHistory(); }
 
-  function renderChat() {
-    const box = document.getElementById('chat-box'); box.innerHTML = "";
-    if (currentChatId && chats[currentChatId]) {
-      chats[currentChatId].messages.forEach(m => addMsgToUI(m.text, m.type));
-    }
-  }
-
-  function saveAndRender() { localStorage.setItem('lemon_chats', JSON.stringify(chats)); renderHistory(); }
-
-  // コード分裂ロジック付きのメッセージ追加
   function addMsgToUI(text, type, target = document.getElementById('chat-box')) {
     const d = document.createElement('div');
     d.className = `msg ${type}`;
-    
-    // コードブロックの抽出 (```code```)
     const parts = text.split(/```/);
-    parts.forEach((part, index) => {
-      if (index % 2 === 1) { // コード部分
-        const pre = document.createElement('div');
-        pre.className = 'code-block';
-        pre.innerHTML = `<span class="code-label">CODE</span><pre style="margin:0">${part.trim()}</pre>`;
-        d.appendChild(pre);
-      } else { // 通常テキスト
-        const span = document.createElement('span');
-        span.innerText = part;
-        d.appendChild(span);
+    parts.forEach((p, i) => {
+      if (i % 2 === 1) {
+        const c = document.createElement('div'); c.className = 'code-block';
+        c.innerHTML = `<pre style="margin:0">${p.trim()}</pre>`;
+        d.appendChild(c);
+      } else {
+        const s = document.createElement('span'); s.innerText = p;
+        d.appendChild(s);
       }
     });
-
-    target.appendChild(d);
-    target.scrollTop = target.scrollHeight;
+    target.appendChild(d); target.scrollTop = target.scrollHeight;
   }
 
   async function run() {
     if (!currentChatId) createNewChat();
     const input = document.getElementById('input');
-    const text = input.value;
-    if (!text) return;
-
-    chats[currentChatId].messages.push({ text, type: 'user' });
-    if (chats[currentChatId].title === "新しい会話") chats[currentChatId].title = text.substring(0, 15);
-    
-    addMsgToUI(text, 'user');
+    if (!input.value) return;
+    chats[currentChatId].messages.push({ text: input.value, type: 'user' });
+    if(chats[currentChatId].title === "新しい会話") chats[currentChatId].title = input.value.substring(0,10);
+    addMsgToUI(input.value, 'user');
     input.value = "";
-
-    // モック返信 (コードが含まれる場合を想定)
-    const aiText = "承知しました。以下のコードをご確認ください。```\nconsole.log('honeylemonai');\n```";
+    // 返信シミュレーション
+    const aiText = "コード例です。```\nconsole.log('honeylemonai');\n```";
     chats[currentChatId].messages.push({ text: aiText, type: 'ai' });
     addMsgToUI(aiText, 'ai');
-    
-    saveAndRender();
+    save();
   }
 
   if (Object.keys(chats).length > 0) loadChat(Object.keys(chats).reverse()[0]); else createNewChat();
