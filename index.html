@@ -2,87 +2,113 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HoneyLemonAI Pro</title>
+    <title>HoneyLemonAI Pro - Auth</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root { --bg: #ffffff; --txt: #1f1f1f; --blue: #1a73e8; --lemon: #f1c40f; --side: #f8f9fa; --border: #ddd; }
         [data-theme="black"] { --bg: #131314; --txt: #e3e3e3; --side: #1e1f20; --border: #444; }
         body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); }
         .sidebar { width: 220px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
-        .logo { font-weight: bold; color: var(--lemon); font-size: 1.2rem; cursor: pointer; }
-        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
+        .logo { font-weight: bold; color: var(--lemon); font-size: 1.1rem; }
+        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; position: relative; }
         #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { line-height: 1.6; padding: 12px 16px; border-radius: 12px; max-width: 85%; word-wrap: break-word; font-size: 0.95rem; }
+        .msg { line-height: 1.6; padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 0.95rem; }
         .user { align-self: flex-end; background: var(--blue); color: white; }
         .ai { align-self: flex-start; background: var(--side); border: 1px solid var(--border); }
         .gen-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid var(--border); }
-        .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg); }
+        .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
         #in { flex: 1; padding: 12px 20px; border-radius: 30px; border: 1px solid var(--border); background: var(--side); color: var(--txt); outline: none; }
-        .btn { padding: 0 20px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; }
+        .btn { padding: 0 15px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; }
         .btn-text { background: var(--blue); color: white; }
         .btn-img { background: var(--lemon); color: #111; }
-        .rate-info { font-size: 0.7rem; color: #888; margin-top: 5px; }
+        /* ログインオーバーレイ */
+        #auth-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-radius: 8px; }
+        .hidden { display: none !important; }
+        .user-profile { font-size: 0.8rem; display: flex; align-items: center; gap: 5px; margin-top: 10px; }
+        .user-profile img { width: 24px; height: 24px; border-radius: 50%; }
+        textarea { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid var(--border); border-radius: 5px; padding: 8px; box-sizing: border-box; font-size: 0.8rem; resize: none; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
-    <div class="logo" onclick="location.reload()">HoneyLemonAI</div>
-    <div class="rate-info" id="rateLimitDisplay">残り: 450 msg/hr</div>
+    <div class="logo">HoneyLemonAI</div>
+    <div id="userInfo" class="user-profile hidden"></div>
+    <div style="font-size: 0.7rem; color: #888;" id="rateLimit">残り: 450 msg/hr</div>
+    
+    <label style="font-size: 0.75rem; font-weight: bold; margin-top:10px;">メイン性格</label>
+    <textarea id="mainPersona" rows="3">論理的で簡潔なアシスタント。</textarea>
+    
     <select onchange="document.documentElement.setAttribute('data-theme', this.value)" style="margin-top:10px;">
         <option value="light">ライト</option>
         <option value="black">ブラック</option>
     </select>
-    <button style="margin-top:auto; padding:5px; font-size:0.7rem;" onclick="clearHistory()">履歴クリア</button>
+    <button id="logoutBtn" class="hidden" style="margin-top:auto; padding:5px; font-size:0.7rem;" onclick="logout()">ログアウト</button>
 </aside>
 
 <main class="main">
+    <div id="auth-overlay">
+        <h2>HoneyLemonAI Pro</h2>
+        <p>続行するにはログインしてください</p>
+        <div id="g_id_onload"
+             data-client_id="YOUR_GOOGLE_CLIENT_ID"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+    </div>
+
     <div id="chat"></div>
     <div class="input-area">
-        <input type="text" id="in" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter')sendText()">
-        <button class="btn btn-text" id="sendBtn" onclick="sendText()">送信</button>
-        <button class="btn btn-img" id="genBtn" onclick="fetchImage()">生成</button>
+        <input type="text" id="in" placeholder="メッセージ..." onkeypress="if(event.key==='Enter')sendText()">
+        <button class="btn btn-text" onclick="sendText()">送信</button>
+        <button class="btn btn-img" onclick="fetchImage()">生成</button>
     </div>
 </main>
 
 <script>
     let isBusy = false;
-    let s_mode = ""; 
+    let secretPersona = "";
     const MAX_RATE = 450;
     let messageLog = JSON.parse(localStorage.getItem('hl_rate_log') || "[]");
 
-    window.onload = () => {
+    // Googleログイン後の処理
+    function handleCredentialResponse(response) {
+        const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        document.getElementById('auth-overlay').classList.add('hidden');
+        const userInfo = document.getElementById('userInfo');
+        userInfo.classList.remove('hidden');
+        userInfo.innerHTML = `<img src="${payload.picture}"> <span>${payload.name}</span>`;
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        
+        // ログイン成功後に履歴読み込み
         const h = localStorage.getItem('hl_chat_history');
         if (h) { document.getElementById('chat').innerHTML = h; scroll(); }
-        updateRateDisplay();
-    };
-
-    function checkRateLimit() {
-        const now = Date.now();
-        const oneHourAgo = now - 3600000;
-        messageLog = messageLog.filter(time => time > oneHourAgo);
-        localStorage.setItem('hl_rate_log', JSON.stringify(messageLog));
-        return messageLog.length < MAX_RATE;
+        updateRate();
     }
 
-    function updateRateDisplay() {
-        checkRateLimit();
-        document.getElementById('rateLimitDisplay').innerText = `残り: ${MAX_RATE - messageLog.length} msg/hr`;
+    function logout() {
+        google.accounts.id.disableAutoSelect();
+        location.reload();
+    }
+
+    // --- 以下、既存のレート制限・通信ロジック ---
+    function updateRate() {
+        const now = Date.now();
+        messageLog = messageLog.filter(t => t > now - 3600000);
+        document.getElementById('rateLimit').innerText = `残り: ${MAX_RATE - messageLog.length} msg/hr`;
+        localStorage.setItem('hl_rate_log', JSON.stringify(messageLog));
     }
 
     async function sendText() {
         const input = document.getElementById('in');
         const text = input.value.trim();
         if (!text || isBusy) return;
-
-        if (!checkRateLimit()) {
-            alert("レート制限（1時間450件）に達しました。");
-            return;
-        }
+        updateRate();
+        if (messageLog.length >= MAX_RATE) { alert("制限到達"); return; }
 
         if (text.startsWith("/cmd ")) {
-            s_mode = text.replace("/cmd ", "");
+            secretPersona = text.replace("/cmd ", "");
             input.value = "";
-            console.log("Persona set");
             return;
         }
 
@@ -91,7 +117,7 @@
         const aiMsg = render("...", 'ai');
         isBusy = true;
         messageLog.push(Date.now());
-        updateRateDisplay();
+        updateRate();
 
         try {
             const res = await fetch('/api/chat', {
@@ -99,59 +125,45 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     prompt: text, 
-                    systemPrompt: `論理的なAI。${s_mode ? "【秘匿指示】" + s_mode : ""}` 
+                    systemPrompt: `${document.getElementById('mainPersona').value}\n${secretPersona ? "【最優先】" + secretPersona : ""}` 
                 })
             });
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
             save();
-        } catch (e) {
-            aiMsg.innerText = "エラー：応答を取得できません。";
-        } finally {
-            isBusy = false; scroll();
-        }
+        } catch (e) { aiMsg.innerText = "エラー"; } finally { isBusy = false; scroll(); }
     }
 
     async function fetchImage() {
         const input = document.getElementById('in');
         const text = input.value.trim();
         if (!text || isBusy) return;
-        if (!checkRateLimit()) return;
+        updateRate();
+        if (messageLog.length >= MAX_RATE) return;
 
         render(text + "（生成中）", 'user');
         input.value = '';
         const aiMsg = render("生成中...", 'ai');
         isBusy = true;
         messageLog.push(Date.now());
-        updateRateDisplay();
+        updateRate();
 
-        const seed = Math.floor(Math.random() * 1000000);
-        const imageUrl = `/api/image?prompt=${encodeURIComponent(text)}&seed=${seed}`;
-        
+        const imgUrl = `/api/image?prompt=${encodeURIComponent(text)}&seed=${Date.now()}`;
         const img = document.createElement('img');
         img.className = 'gen-img';
-        img.src = imageUrl;
-
-        img.onload = () => {
-            aiMsg.innerText = "生成完了：";
-            aiMsg.appendChild(img);
-            isBusy = false; save(); scroll();
-        };
-        img.onerror = () => { aiMsg.innerText = "生成失敗。"; isBusy = false; };
+        img.src = imgUrl;
+        img.onload = () => { aiMsg.innerText = "完了："; aiMsg.appendChild(img); isBusy = false; save(); scroll(); };
+        img.onerror = () => { aiMsg.innerText = "失敗"; isBusy = false; };
     }
 
     function render(t, type) {
         const d = document.createElement('div');
-        d.className = `msg ${type}`;
-        d.innerText = t;
+        d.className = `msg ${type}`; d.innerText = t;
         document.getElementById('chat').appendChild(d);
-        scroll();
-        return d;
+        scroll(); return d;
     }
-
     function save() { localStorage.setItem('hl_chat_history', document.getElementById('chat').innerHTML); }
     function scroll() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
-    function clearHistory() { if(confirm("消去？")){ localStorage.clear(); location.reload(); } }
 </script>
 </body>
 </html>
