@@ -57,7 +57,7 @@
     <div class="logo">HoneyLemonAI Pro</div>
     <div class="config-item">
         <label>性格設定</label>
-        <textarea id="persona">メタな解説を避け、自然な会話をする。語尾は「レモン」。</textarea>
+        <textarea id="persona">メタ発言はなしで、敬語で考える</textarea>
     </div>
     <div class="config-item">
         <label>モード</label>
@@ -84,7 +84,7 @@
     <div class="chat-container" id="chatWin">
         <div class="row">
             <div class="icon ai-icon"></div>
-            <div class="text">メタな回答は卒業です。今日は何について話しましょうかレモン？</div>
+            <div class="text">私はAIです。</div>
         </div>
     </div>
 
@@ -121,7 +121,7 @@
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
         } catch (e) {
-            aiMsg.innerText = "エラーですレモン。";
+            aiMsg.innerText = "エラー";
         }
     }
 
