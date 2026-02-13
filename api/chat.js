@@ -1,15 +1,18 @@
+// api/chat.js
 let chats = JSON.parse(localStorage.getItem('lemon_chats_v2') || '{}');
 let currentChatId = null;
 
-// モデル選択メニューの構築
-function initModels() {
+// モデルの読み込み確認
+function init() {
   const select = document.getElementById('modelSelect');
-  if (!window.HoneyLemonModels) return;
-  Object.keys(window.HoneyLemonModels).forEach(key => {
-    const opt = document.createElement('option');
-    opt.value = key; opt.innerText = key;
-    select.appendChild(opt);
-  });
+  if (window.HoneyLemonModels) {
+    Object.keys(window.HoneyLemonModels).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.innerText = key;
+      select.appendChild(opt);
+    });
+  }
 }
 
 async function run() {
@@ -18,65 +21,46 @@ async function run() {
   if (!currentChatId) createNewChat();
 
   const userText = input.value;
-  const batchCount = parseInt(document.getElementById('batchSelect').value);
-  const selectedModel = window.HoneyLemonModels[document.getElementById('modelSelect').value];
-  
+  const modelKey = document.getElementById('modelSelect').value;
+  const model = window.HoneyLemonModels[modelKey];
+  const batch = parseInt(document.getElementById('batchSelect').value);
+
+  // 画面表示とデータ保存
+  displayMessage(userText, 'user');
   chats[currentChatId].messages.push({ text: userText, type: 'user' });
-  if(chats[currentChatId].title === "新しい会話") chats[currentChatId].title = userText.substring(0, 10);
-  renderChat();
   input.value = "";
 
-  const box = document.getElementById('chat-box');
-  const group = document.createElement('div');
-  group.className = `response-group batch-${batchCount}`;
-  box.appendChild(group);
-
-  // 隠し性格(PERSONALITY)を注入
-  const systemPrompt = `CORE_ID: ${selectedModel.PERSONALITY}\nUSER_SETTING: ${document.getElementById('personalityInput').value}\nLEN: ${document.getElementById('lengthSelect').value}`;
-
-  for (let i = 0; i < batchCount; i++) {
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'msg ai';
-    aiDiv.innerText = `${selectedModel.Models} 応答中...`;
-    group.appendChild(aiDiv);
-
-    setTimeout(() => {
-      const result = `[${selectedModel.Models}] 隠し性格を反映した回答シミュレーションです。`;
-      aiDiv.innerText = result;
-      chats[currentChatId].messages.push({ text: result, type: 'ai' });
-      save();
-    }, 600 + (i * 200));
+  // PERSONALITY（隠し性格）と性格設定を結合して「分裂」実行
+  for (let i = 0; i < batch; i++) {
+    const aiResponse = `[${model.Models}] ${userText} に対する ${document.getElementById('personalityInput').value || '標準'} な回答です。`;
+    displayMessage(aiResponse, 'ai');
+    chats[currentChatId].messages.push({ text: aiResponse, type: 'ai' });
   }
+  save();
 }
 
-function createNewChat() { currentChatId = Date.now(); chats[currentChatId] = { title: "新しい会話", messages: [] }; save(); renderChat(); }
-function loadChat(id) { currentChatId = id; renderChat(); renderHistory(); }
-function save() { localStorage.setItem('lemon_chats_v2', JSON.stringify(chats)); renderHistory(); }
-
-function renderChat() {
-  const box = document.getElementById('chat-box'); box.innerHTML = "";
-  if (currentChatId && chats[currentChatId]) {
-    chats[currentChatId].messages.forEach(m => {
-      const d = document.createElement('div'); d.className = `msg ${m.type}`; d.innerText = m.text; box.appendChild(d);
-    });
-  }
+function displayMessage(text, type) {
+  const box = document.getElementById('chat-box');
+  const d = document.createElement('div');
+  d.style.margin = "10px 0";
+  d.style.padding = "10px 15px";
+  d.style.borderRadius = "10px";
+  d.style.maxWidth = "80%";
+  d.style.background = type === 'user' ? '#FFD700' : '#fff';
+  d.style.alignSelf = type === 'user' ? 'flex-end' : 'flex-start';
+  d.innerText = text;
+  box.appendChild(d);
   box.scrollTop = box.scrollHeight;
 }
 
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  list.innerHTML = Object.keys(chats).reverse().map(id => `
-    <div class="history-item ${id == currentChatId ? 'active' : ''}" onclick="loadChat('${id}')">
-      <span style="flex:1; overflow:hidden;">${chats[id].title}</span>
-      <div style="display:flex; gap:10px;">
-        <div class="icon-edit" onclick="renameChat(event, '${id}')"></div>
-        <div class="icon-trash" onclick="deleteChat(event, '${id}')"></div>
-      </div>
-    </div>
-  `).join('');
+function createNewChat() {
+  currentChatId = Date.now();
+  chats[currentChatId] = { title: "新しい会話", messages: [] };
+  save();
 }
 
-function renameChat(e, id) { e.stopPropagation(); const n = prompt("名前変更", chats[id].title); if(n){chats[id].title=n; save();} }
-function deleteChat(e, id) { e.stopPropagation(); if(confirm("削除？")){delete chats[id]; if(currentChatId==id)currentChatId=null; save(); renderChat();} }
+function save() {
+  localStorage.setItem('lemon_chats_v2', JSON.stringify(chats));
+}
 
-window.onload = () => { initModels(); if (Object.keys(chats).length > 0) loadChat(Object.keys(chats).reverse()[0]); else createNewChat(); };
+window.onload = init;
