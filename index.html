@@ -2,32 +2,41 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>honeylemonai</title>
+    <title>HoneyLemonAI</title>
     <style>
-        /* ハニーレモンをイメージしたカラーデザイン */
-        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; background: #fffcf0; color: #444; }
-        h1 { color: #f9d71c; text-shadow: 1px 1px 2px #ccc; text-align: center; }
-        #output { background: #ffffff; padding: 15px; min-height: 150px; margin: 10px 0; border-radius: 12px; white-space: pre-wrap; border: 2px solid #f9d71c; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fffef2; color: #333; }
+        .logo-container { text-align: center; margin-bottom: 20px; }
+        .logo-text { font-size: 2.2em; font-weight: 800; color: #f1c40f; border-bottom: 4px solid #f1c40f; padding-bottom: 5px; display: inline-block; }
+        
+        /* 応答エリアをコードが見やすいように広めに設定 */
+        #output { 
+            background: #ffffff; padding: 20px; min-height: 300px; margin: 20px 0; 
+            border-radius: 15px; border: 1px solid #eee; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.1); 
+            white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px;
+            overflow-x: auto;
+        }
+
         #progress-container { width: 100%; background: #eee; border-radius: 10px; margin: 10px 0; display: none; }
-        #progress-bar { width: 0%; height: 20px; background: #f9d71c; border-radius: 10px; text-align: center; line-height: 20px; font-size: 12px; color: #444; font-weight: bold; }
-        textarea { width: 100%; height: 80px; background: #fff; color: #444; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; background: #f9d71c; color: #444; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        button:hover { background: #f0c800; }
-        button:disabled { background: #eee; color: #aaa; cursor: not-allowed; }
+        #progress-bar { width: 0%; height: 10px; background: #f1c40f; border-radius: 10px; transition: width 0.3s; }
+
+        textarea { width: 100%; height: 120px; border: 2px solid #f9f0c3; border-radius: 12px; padding: 15px; box-sizing: border-box; outline: none; font-size: 16px; font-family: sans-serif; }
+        button { width: 100%; padding: 15px; background: #f1c40f; color: #fff; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; font-size: 18px; }
+        button:disabled { background: #e0e0e0; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <h1>🍋 honeylemonai</h1>
-    <div id="progress-container">
-        <div id="progress-bar">0%</div>
-    </div>
-    <div id="output">honeylemonai を準備しています...</div>
-    <textarea id="input" placeholder="honeylemonai にメッセージを送る..."></textarea>
-    <button id="sendBtn" disabled>準備中...</button>
+    <div class="logo-container"><div class="logo-text">HoneyLemonAI</div></div>
+    
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="output">複雑なタスク（Code等）に対応するため、知能データを読み込んでいます...</div>
+
+    <textarea id="input" placeholder="例：HTMLでボタンを作るコードを書いて..."></textarea>
+    <button id="sendBtn" disabled>Loading...</button>
 
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.1';
 
+        let generator;
         const outputDiv = document.getElementById('output');
         const sendBtn = document.getElementById('sendBtn');
         const progressBar = document.getElementById('progress-bar');
@@ -36,48 +45,46 @@
         async function init() {
             try {
                 progressContainer.style.display = 'block';
-                
-                // 比較的安定して動きやすいモデル
-                const generator = await pipeline('text-generation', 'onnx-community/Llama-3.2-1B-Instruct-q4f16', {
+                // プログラミングに強いQwenの軽量版を採用
+                generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
                     device: 'wasm',
                     progress_callback: (data) => {
                         if (data.status === 'progress') {
-                            const p = Math.round(data.progress);
-                            progressBar.style.width = p + '%';
-                            progressBar.innerText = `読み込み中: ${p}%`;
+                            progressBar.style.width = data.progress + '%';
                         }
                     }
                 });
-
-                outputDiv.innerText = "こんにちは！私は honeylemonai です。何をお手伝いしましょうか？";
+                outputDiv.innerText = "準備完了。コード生成や複雑な質問もどうぞ。";
                 sendBtn.disabled = false;
                 sendBtn.innerText = "送信";
                 progressContainer.style.display = 'none';
-
-                window.ask = async () => {
-                    const text = document.getElementById('input').value;
-                    if(!text || sendBtn.disabled) return;
-                    
-                    sendBtn.disabled = true;
-                    sendBtn.innerText = "考え中...";
-                    outputDiv.innerText = "honeylemonai が考えています...";
-
-                    try {
-                        const output = await generator([{ role: "user", content: text }], { max_new_tokens: 128 });
-                        outputDiv.innerText = output[0].generated_text.at(-1).content;
-                    } catch (err) {
-                        outputDiv.innerText = "エラーが起きてしまいました...もう一度試してください。";
-                    } finally {
-                        sendBtn.disabled = false;
-                        sendBtn.innerText = "送信";
-                    }
-                };
-                sendBtn.onclick = window.ask;
-
             } catch (e) {
-                outputDiv.innerText = "起動エラー: " + e.message;
+                outputDiv.innerText = "エラー: " + e.message;
             }
         }
+
+        window.ask = async () => {
+            const text = document.getElementById('input').value;
+            if(!text) return;
+            sendBtn.disabled = true;
+            sendBtn.innerText = "解析中...";
+            outputDiv.innerText = "HoneyLemonAI がコードを生成しています...";
+
+            try {
+                const output = await generator([{ role: "user", content: text }], { 
+                    max_new_tokens: 512, // コード用に長めの出力を許可
+                    temperature: 0.7 
+                });
+                outputDiv.innerText = output[0].generated_text.at(-1).content;
+            } catch (err) {
+                outputDiv.innerText = "生成中にエラーが発生しました。";
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = "送信";
+            }
+        };
+
+        sendBtn.onclick = window.ask;
         init();
     </script>
 </body>
