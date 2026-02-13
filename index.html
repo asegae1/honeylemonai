@@ -2,100 +2,143 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HoneyLemonAI Pro</title>
+    <title>HoneyLemonAI Pro Ultimate</title>
     <style>
-        :root { --hl-yellow: #f1c40f; --hl-blue: #00d2ff; --sidebar-bg: #f8f9fa; }
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; }
+        :root { --hl-y: #f1c40f; --hl-b: #00d2ff; --bg: #fff; --p: #f8f9fa; --txt: #333; }
+        [data-theme="black"] { --bg: #000; --p: #1a1a1a; --txt: #fff; }
+        [data-theme="light"] { --bg: #f5f5f5; --p: #fff; --txt: #222; }
 
-        /* サイドバー */
-        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid #eee; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-        .logo-box { background: var(--hl-yellow); color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-weight: 900; margin-bottom: 20px; }
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); transition: 0.3s; }
         
-        /* 設定セクション */
-        .config-group { margin-bottom: 15px; border-top: 1px solid #ddd; padding-top: 15px; }
-        label { font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
-        select, textarea, input[type="range"] { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem; }
-        textarea { height: 60px; resize: none; }
+        /* 1.サイドバー 2.レスポンシブ 3.カスタムスクロール */
+        .sidebar { width: 300px; background: var(--p); border-right: 1px solid #ddd; padding: 15px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--hl-y); }
 
-        /* メイン */
+        /* 4.ロゴ 5.バッジ */
+        .logo { background: var(--hl-y); color: #fff; padding: 10px; border-radius: 8px; text-align: center; font-weight: 900; }
+        .badge { font-size: 0.6rem; border: 1px solid #fff; padding: 1px 4px; margin-left: 5px; }
+
+        /* 6.セクション分け 7.フォームUI */
+        .sec { border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; font-size: 0.8rem; }
+        label { font-weight: bold; display: block; margin-bottom: 3px; color: var(--hl-y); }
+        select, textarea, input { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; background: var(--bg); color: var(--txt); margin-bottom: 5px; }
+
+        /* メインエリア 8.レイアウト構成 */
         .main { flex: 1; display: flex; flex-direction: column; }
-        .top-bar { padding: 10px 20px; border-bottom: 1px solid #eee; display: flex; gap: 10px; }
-        .model-tag { padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.8rem; }
-        .model-tag.active { background: #fffde7; border-color: var(--hl-yellow); font-weight: bold; }
+        .top { padding: 10px; border-bottom: 1px solid #ddd; display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        /* 9.モデルタグ 10.アクティブ表示 */
+        .m-tag { padding: 4px 10px; border-radius: 15px; border: 1px solid #ddd; cursor: pointer; font-size: 0.75rem; }
+        .m-tag.active { background: var(--hl-y); color: #fff; border-color: var(--hl-y); }
 
-        #chat-window { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 80%; padding: 12px 18px; border-radius: 18px; line-height: 1.5; }
-        .user { align-self: flex-end; background: #e0f7fa; border: 2px solid var(--hl-blue); border-bottom-right-radius: 2px; }
-        .ai { align-self: flex-start; background: #fffde7; border: 2px solid var(--hl-yellow); border-bottom-left-radius: 2px; }
+        /* 11.チャット窓 12.吹き出し 13.アニメーション */
+        #win { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 12px; border-radius: 12px; max-width: 80%; line-height: 1.5; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .user { align-self: flex-end; background: #e0f7fa; border: 1px solid var(--hl-b); }
+        .ai { align-self: flex-start; background: #fffde7; border: 1px solid var(--hl-y); }
 
-        /* 入力エリア */
-        .input-area { padding: 20px; border-top: 1px solid #eee; }
-        .input-wrap { display: flex; align-items: center; gap: 10px; border: 1px solid #ddd; border-radius: 10px; padding: 10px; }
-        .clip { width: 20px; height: 20px; border: 2px solid var(--hl-blue); border-radius: 50%; cursor: pointer; }
-        textarea#userInput { flex: 1; border: none; outline: none; height: 24px; font-size: 1rem; }
-        button { background: white; border: 1px solid #333; padding: 5px 15px; border-radius: 6px; cursor: pointer; }
+        /* 14.入力UI 15.添付アイコン 16.送信ボタン */
+        .footer { padding: 15px; border-top: 1px solid #ddd; }
+        .in-grp { display: flex; gap: 10px; align-items: center; border: 1px solid #ddd; padding: 10px; border-radius: 10px; }
+        .clip { width: 20px; height: 20px; border: 2px solid var(--hl-b); border-radius: 50%; cursor: pointer; position: relative; }
+        .clip::after { content: ""; position: absolute; width: 8px; height: 2px; background: var(--hl-b); top: 9px; left: 6px; transform: rotate(45deg); }
+        textarea { border: none; outline: none; flex: 1; height: 24px; }
+        .btn { background: var(--hl-y); color: #fff; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+
+        /* 17.文字数カウント 18.ステータスランプ */
+        .info { font-size: 0.7rem; color: #888; text-align: right; margin-top: 5px; }
+        .status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; margin-right: 5px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="logo-box">HoneyLemonAI <span>Pro</span></div>
+    <div class="logo">HoneyLemonAI <span class="badge">PRO</span></div>
     
-    <div class="config-group">
-        <label>性格設定 (Persona)</label>
-        <textarea id="persona" placeholder="例: 親切なAIアシスタントとして。"></textarea>
+    <div class="sec">
+        <label>19. 性格設定 (Persona)</label>
+        <textarea id="persona">親切なハニーレモンAI。語尾は「レモン」</textarea>
     </div>
 
-    <div class="config-group">
-        <label>モード</label>
+    <div class="sec">
+        <label>20. モード</label>
         <select id="mode">
-            <option value="簡潔に答えて。">高速モード</option>
-            <option value="丁寧かつ論理的に。">自動モード</option>
-            <option value="専門的な視点で詳細に。">研究者モード</option>
+            <option value="簡潔に。">高速</option>
+            <option value="詳しく。">自動</option>
+            <option value="論文形式。">研究者</option>
         </select>
     </div>
 
-    <div class="config-group">
-        <label>レート (最大トークン): <span id="rVal">1000</span></label>
-        <input type="range" id="rate" min="100" max="4000" step="100" value="1000" oninput="rVal.innerText=this.value">
+    <div class="sec">
+        <label>21. 創造性 (Temp)</label>
+        <input type="range" id="temp" min="0" max="2" step="0.1" value="0.7">
     </div>
 
-    <button onclick="localStorage.removeItem('HL_PRO_LOG');location.reload();" style="margin-top:20px; font-size:0.7rem;">履歴クリア</button>
+    <div class="sec">
+        <label>22. レート (Tokens): <span id="rV">1000</span></label>
+        <input type="range" id="rate" min="100" max="4000" step="100" value="1000" oninput="rV.innerText=this.value">
+    </div>
+
+    <div class="sec">
+        <label>23. テーマ</label>
+        <select id="theme" onchange="setTheme(this.value)">
+            <option value="system">システム</option>
+            <option value="light">ライト</option>
+            <option value="black">ブラック</option>
+        </select>
+    </div>
+
+    <div class="sec">
+        <button onclick="clearLogs()" class="btn" style="background:#e74c3c; width:100%;">24. 履歴を全削除</button>
+    </div>
+    
+    <div class="info"><span class="status"></span>25. システム稼働中</div>
 </div>
 
 <div class="main">
-<div class="top-bar">
-    <div class="model-tag" onclick="changeM('llama-3.2-1b-preview',this)"># nano</div>
-    <div class="model-tag active" onclick="changeM('llama-3.1-8b-instant',this)"># standard</div>
-    <div class="model-tag" onclick="changeM('mixtral-8x7b-32768',this)">● Pro</div>
-</div>
-    <div id="chat-window"></div>
-    <div class="input-area">
-        <div class="input-wrap">
-            <div class="clip" onclick="document.getElementById('file').click()"></div>
-            <input type="file" id="file" style="display:none">
-            <textarea id="userInput" placeholder="メッセージを入力..."></textarea>
-            <button onclick="ask()">送信</button>
+    <div class="top">
+        <div class="m-tag" onclick="chM('llama-3.2-3b-preview',this)"># nano</div>
+        <div class="m-tag active" onclick="chM('llama-3.1-8b-instant',this)"># standard</div>
+        <div class="m-tag" onclick="chM('mixtral-8x7b-32768',this)">● Pro (Mixtral)</div>
+    </div>
+    <div id="win"></div>
+    <div class="footer">
+        <div class="in-grp">
+            <div class="clip" onclick="alert('ファイル解析機能準備中')"></div>
+            <textarea id="in" placeholder="メッセージを入力..."></textarea>
+            <button class="btn" onclick="ask()">送信</button>
         </div>
+        <div class="info" id="count">0 文字</div>
     </div>
 </div>
 
 <script>
-    let model = 'llama-3.3-70b-versatile';
-    let logs = JSON.parse(localStorage.getItem('HL_PRO_LOG')) || [];
+    let model = 'llama-3.1-8b-instant';
+    let logs = JSON.parse(localStorage.getItem('HL_X')) || [];
 
     function init() {
-        logs.forEach(l => render(l.text, l.type));
+        logs.forEach(l => render(l.t, l.type));
+        setTheme(localStorage.getItem('HL_T') || 'system');
+        document.getElementById('in').addEventListener('input', e => {
+            document.getElementById('count').innerText = e.target.value.length + " 文字";
+        });
     }
 
-    function changeM(m, e) {
+    function chM(m, e) {
         model = m;
-        document.querySelectorAll('.model-tag').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.m-tag').forEach(t => t.classList.remove('active'));
         e.classList.add('active');
     }
 
+    function setTheme(t) {
+        localStorage.setItem('HL_T', t);
+        const dark = t === 'black' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'black' : 'light');
+    }
+
     async function ask() {
-        const input = document.getElementById('userInput');
+        const input = document.getElementById('in');
         const text = input.value.trim();
         if(!text) return;
 
@@ -110,16 +153,17 @@
                     prompt: text,
                     model: model,
                     systemPrompt: `${document.getElementById('persona').value}\n${document.getElementById('mode').value}`,
-                    maxTokens: document.getElementById('rate').value
+                    maxTokens: document.getElementById('rate').value,
+                    temp: document.getElementById('temp').value
                 })
             });
             const data = await res.json();
             const reply = data.choices[0].message.content;
             aiMsg.innerText = reply;
-            logs.push({text: text, type: 'user'}, {text: reply, type: 'ai'});
-            localStorage.setItem('HL_PRO_LOG', JSON.stringify(logs));
+            logs.push({t: text, type: 'user'}, {t: reply, type: 'ai'});
+            localStorage.setItem('HL_X', JSON.stringify(logs));
         } catch (e) {
-            aiMsg.innerText = "エラー。Vercel設定を確認して。";
+            aiMsg.innerText = "エラー。モデルをStandardに変えてみてレモン。";
         }
     }
 
@@ -127,11 +171,13 @@
         const div = document.createElement('div');
         div.className = `msg ${type}`;
         div.innerText = t;
-        const win = document.getElementById('chat-window');
-        win.appendChild(div);
-        win.scrollTop = win.scrollHeight;
+        const w = document.getElementById('win');
+        w.appendChild(div);
+        w.scrollTop = w.scrollHeight;
         return div;
     }
+
+    function clearLogs() { if(confirm("消すレモン？")) { localStorage.removeItem('HL_X'); location.reload(); } }
     init();
 </script>
 </body>
