@@ -5,109 +5,89 @@
     <title>HoneyLemonAI</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
-        :root { --main-yellow: #f1c40f; --bg-cream: #fffef2; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: var(--bg-cream); color: #333; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 4px solid var(--main-yellow); padding-bottom: 10px; }
-        .header h1 { margin: 0; color: var(--main-yellow); font-weight: 900; letter-spacing: 1px; }
+        :root { --hl-yellow: #f1c40f; --hl-bg: #fffef2; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; background: var(--hl-bg); color: #333; }
         
-        /* チャット表示エリア */
-        #chat-window { background: white; border-radius: 15px; border: 1px solid #eee; height: 500px; overflow-y: auto; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(241, 196, 15, 0.1); }
-        .msg { margin-bottom: 20px; padding: 15px; border-radius: 10px; line-height: 1.6; }
-        .ai-msg { background: #fdfdfd; border-left: 5px solid var(--main-yellow); }
-        .user-msg { background: #f9f0c3; margin-left: 50px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 2.8rem; font-weight: 900; color: var(--hl-yellow); border-bottom: 5px solid var(--hl-yellow); display: inline-block; padding: 0 15px; }
 
-        /* 入力エリア */
-        .input-group { display: flex; gap: 10px; }
-        textarea { flex: 1; height: 80px; border: 2px solid #eee; border-radius: 10px; padding: 12px; font-size: 16px; outline: none; transition: 0.3s; }
-        textarea:focus { border-color: var(--main-yellow); }
-        button { width: 100px; background: var(--main-yellow); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        button:disabled { background: #ccc; }
+        #chat-window { background: white; height: 500px; overflow-y: auto; padding: 25px; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 15px 35px rgba(241, 196, 15, 0.1); margin-bottom: 25px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .msg { padding: 15px 20px; border-radius: 18px; line-height: 1.7; max-width: 85%; font-size: 16px; position: relative; }
+        .ai { background: #fdfdfd; border-left: 6px solid var(--hl-yellow); align-self: flex-start; box-shadow: 2px 2px 5px rgba(0,0,0,0.02); }
+        .user { background: var(--hl-yellow); color: white; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
 
-        /* ローディングバー */
-        #loading { display: none; margin-bottom: 10px; }
-        .bar { width: 100%; background: #eee; height: 8px; border-radius: 4px; overflow: hidden; }
-        .fill { width: 0%; height: 100%; background: var(--main-yellow); transition: 0.3s; }
+        .input-area { display: flex; gap: 12px; background: white; padding: 10px; border-radius: 15px; border: 2px solid #f9f0c3; }
+        textarea { flex: 1; height: 60px; border: none; padding: 10px; font-size: 16px; outline: none; resize: none; background: transparent; }
+        button { background: var(--hl-yellow); color: white; border: none; border-radius: 12px; padding: 0 25px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #d4ac0d; transform: translateY(-2px); }
+        button:disabled { background: #ccc; transform: none; }
+
+        pre { border-radius: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
-<div class="header"><h1>HoneyLemonAI</h1></div>
-
-<div id="loading">
-    <div style="font-size: 12px; margin-bottom: 5px;">脳データを同期中...</div>
-    <div class="bar"><div class="fill" id="fill"></div></div>
-</div>
+<div class="header"><div class="logo">HoneyLemonAI</div></div>
 
 <div id="chat-window">
-    <div class="msg ai-msg">こんにちは。HoneyLemonAIです。コードの作成から複雑な質問まで、日本語でお手伝いします。</div>
+    <div class="msg ai">こんにちは！HoneyLemonAIです。何でも聞いてください。コードの作成もお手伝いします。</div>
 </div>
 
-<div class="input-group">
-    <textarea id="input" placeholder="ここに質問を入力..."></textarea>
-    <button id="sendBtn" disabled>待機中</button>
+<div class="input-area">
+    <textarea id="userInput" placeholder="HoneyLemonAI にメッセージを送る..."></textarea>
+    <button id="sendBtn" onclick="ask()">送信</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-<script type="module">
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.1';
-
-    let generator;
-    const chatWin = document.getElementById('chat-window');
-    const sendBtn = document.getElementById('sendBtn');
-    const fill = document.getElementById('fill');
-    const loading = document.getElementById('loading');
-
-    async function init() {
-        loading.style.display = 'block';
-        try {
-            generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
-                device: 'wasm',
-                progress_callback: (d) => { if(d.status==='progress') fill.style.width = d.progress + '%'; }
-            });
-            loading.style.display = 'none';
-            sendBtn.innerText = "送信";
-            sendBtn.disabled = false;
-        } catch (e) { alert("起動失敗: " + e.message); }
-    }
-
+<script>
     async function ask() {
-        const text = document.getElementById('input').value;
-        if(!text || sendBtn.disabled) return;
-        
-        // ユーザー表示
-        const uMsg = document.createElement('div');
-        uMsg.className = 'msg user-msg';
-        uMsg.innerText = text;
-        chatWin.appendChild(uMsg);
-        document.getElementById('input').value = '';
-        
-        // AI応答枠
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'msg ai-msg';
-        aiMsg.innerText = "考え中...";
-        chatWin.appendChild(aiMsg);
-        chatWin.scrollTop = chatWin.scrollHeight;
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if(!text) return;
 
-        sendBtn.disabled = true;
+        addMsg(text, 'user');
+        input.value = '';
+        const aiMsg = addMsg("考え中...", 'ai');
+        const btn = document.getElementById('sendBtn');
+        btn.disabled = true;
 
         try {
-            // 日本語で答えるよう強く指示
-            const prompt = `User: ${text}\nAssistant (Please answer in Japanese):`;
-            const output = await generator(prompt, { max_new_tokens: 512, temperature: 0.5 });
+            // Vercelに作ったAPI（隠し部屋）に通信
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                body: JSON.stringify({ prompt: text })
+            });
+            const data = await res.json();
+            const reply = data.choices[0].message.content;
             
-            let result = output[0].generated_text.split("Assistant (Please answer in Japanese):")[1] || output[0].generated_text;
-            aiMsg.innerHTML = result.replace(/```([\s\S]*?)```/g, '<pre><code class="language-javascript">$1</code></pre>');
+            // MarkdownのコードブロックをHTMLに変換
+            aiMsg.innerHTML = reply.replace(/```([\s\S]*?)```/g, (m, code) => 
+                `<pre><code class="language-javascript">${code.trim()}</code></pre>`);
+            
             Prism.highlightAllUnder(aiMsg);
         } catch (e) {
-            aiMsg.innerText = "ごめんなさい、エラーが発生しました。";
+            aiMsg.innerText = "エラーが発生しました。接続を確認してください。";
         } finally {
-            sendBtn.disabled = false;
-            chatWin.scrollTop = chatWin.scrollHeight;
+            btn.disabled = false;
+            scrollDown();
         }
     }
 
-    sendBtn.onclick = ask;
-    init();
+    function addMsg(content, type) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = content;
+        const win = document.getElementById('chat-window');
+        win.appendChild(div);
+        scrollDown();
+        return div;
+    }
+
+    function scrollDown() {
+        const win = document.getElementById('chat-window');
+        win.scrollTop = win.scrollHeight;
+    }
 </script>
 </body>
 </html>
