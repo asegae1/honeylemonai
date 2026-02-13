@@ -5,40 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HoneyLemonAI Pro</title>
     <style>
-        :root { --bg: #ffffff; --txt: #1f1f1f; --blue: #1a73e8; --lemon: #f1c40f; --side: #f8f9fa; }
-        [data-theme="black"] { --bg: #131314; --txt: #e3e3e3; --side: #1e1f20; }
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); }
+        :root { --bg: #ffffff; --txt: #1f1f1f; --blue: #1a73e8; --lemon: #f1c40f; --side: #f8f9fa; --border: #ddd; }
+        [data-theme="black"] { --bg: #131314; --txt: #e3e3e3; --side: #1e1f20; --border: #444; }
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); transition: 0.3s; }
         
-        .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; }
-        .logo { font-weight: bold; color: var(--lemon); font-size: 1.1rem; }
-        textarea, select { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid #ccc; border-radius: 5px; padding: 5px; }
+        /* サイドバー */
+        .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
+        .logo { font-weight: bold; color: var(--lemon); font-size: 1.1rem; margin-bottom: 10px; }
+        label { font-size: 0.8rem; font-weight: bold; }
+        textarea, select { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 0.85rem; }
+        .btn-clear { background: #ea4335; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; margin-top: auto; }
 
-        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .msg { line-height: 1.6; white-space: pre-wrap; }
+        /* メインチャット */
+        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; position: relative; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+        .msg { line-height: 1.6; white-space: pre-wrap; font-size: 1rem; }
         .user { color: var(--blue); font-weight: bold; }
-        .gen-img { width: 100%; max-width: 512px; border-radius: 10px; margin-top: 10px; border: 1px solid #ddd; display: block; }
+        .ai { color: var(--txt); }
+        .gen-img { width: 100%; max-width: 512px; border-radius: 12px; margin-top: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: block; }
 
-        .input-area { padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; }
-        #in { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; background: var(--bg); color: var(--txt); }
-        button { background: var(--blue); color: #fff; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; }
+        /* 入力エリア */
+        .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg); }
+        #in { flex: 1; padding: 14px 20px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--side); color: var(--txt); font-size: 1rem; }
+        #in:focus { border-color: var(--blue); }
+        .btn-send { background: var(--blue); color: #fff; border: none; padding: 0 25px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
     <div class="logo">HoneyLemonAI Pro</div>
-    <label style="font-size:0.8rem">性格設定</label>
-    <textarea id="persona">親切なアシスタント。</textarea>
     
-    <label style="font-size:0.8rem">テーマ</label>
+    <label>性格設定</label>
+    <textarea id="persona" placeholder="例：親切なアシスタント">親切なアシスタント。</textarea>
+    
+    <label>テーマ</label>
     <select onchange="document.documentElement.setAttribute('data-theme', this.value)">
         <option value="light">ライト</option>
         <option value="black">ブラック</option>
     </select>
 
-    <div style="font-size:0.7rem; color:#888; margin-top:auto;">
-        ※メタ発言禁止・語尾制限適用中
+    <button class="btn-clear" onclick="clearChat()">履歴を削除</button>
+
+    <div style="font-size:0.7rem; color:#888; text-align: center;">
+        ※メタ発言・特定語尾を制限中
     </div>
 </aside>
 
@@ -46,31 +57,39 @@
     <div id="chat"></div>
     <div class="input-area">
         <input type="text" id="in" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter')send()">
-        <button onclick="send()">送信</button>
+        <button class="btn-send" id="btnSend" onclick="send()">送信</button>
     </div>
 </main>
 
 <script>
     let isGenerating = false;
 
+    // 起動時にローカルストレージから履歴を復元
+    window.onload = () => {
+        const savedChat = localStorage.getItem('honeyLemonChatHistory');
+        if (savedChat) {
+            document.getElementById('chat').innerHTML = savedChat;
+            scrollEnd();
+        }
+    };
+
     async function send() {
         const input = document.getElementById('in');
-        const chatWin = document.getElementById('chat');
+        const btn = document.getElementById('btnSend');
         const text = input.value.trim();
 
         if (!text || isGenerating) return;
 
+        isGenerating = true;
+        btn.disabled = true;
         render(text, 'user');
         input.value = '';
-        isGenerating = true;
 
-        // 【画像生成判定】明確に「作って」等のキーワードがある場合のみ発動
+        // 【画像生成判定】
         const imageKeywords = /(画像|絵|写真|イラスト).*(作って|描いて|生成|見せて)/;
-        
         if (text.match(imageKeywords)) {
             const aiMsg = render("画像を生成中...", 'ai');
             const seed = Date.now();
-            // pollinations.ai のURLを構成
             const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
             
             const img = document.createElement('img');
@@ -78,16 +97,15 @@
             img.src = imageUrl;
 
             img.onload = () => {
-                aiMsg.firstChild.textContent = "生成が完了しました。";
-                chatWin.scrollTop = chatWin.scrollHeight;
+                aiMsg.firstChild.textContent = "画像を生成しました：";
+                saveChat();
+                scrollEnd();
             };
-
-            img.onerror = () => {
-                aiMsg.innerText = "画像の生成に失敗しました。";
-            };
+            img.onerror = () => { aiMsg.innerText = "画像の生成に失敗しました。"; };
 
             aiMsg.appendChild(img);
             isGenerating = false;
+            btn.disabled = false;
             return;
         }
 
@@ -110,11 +128,13 @@
 
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
+            saveChat();
         } catch (e) {
-            aiMsg.innerText = "エラーが発生しました。";
+            aiMsg.innerText = "通信エラーが発生しました。APIの状態を確認してください。";
         } finally {
             isGenerating = false;
-            chatWin.scrollTop = chatWin.scrollHeight;
+            btn.disabled = false;
+            scrollEnd();
         }
     }
 
@@ -124,8 +144,25 @@
         d.innerText = (type === 'user' ? 'あなた: ' : 'AI: ') + t;
         const c = document.getElementById('chat');
         c.appendChild(d);
-        c.scrollTop = c.scrollHeight;
+        scrollEnd();
         return d;
+    }
+
+    function scrollEnd() {
+        const c = document.getElementById('chat');
+        c.scrollTop = c.scrollHeight;
+    }
+
+    function saveChat() {
+        const chatHtml = document.getElementById('chat').innerHTML;
+        localStorage.setItem('honeyLemonChatHistory', chatHtml);
+    }
+
+    function clearChat() {
+        if (confirm("これまでの会話履歴をすべて削除しますか？")) {
+            localStorage.removeItem('honeyLemonChatHistory');
+            document.getElementById('chat').innerHTML = '';
+        }
     }
 </script>
 </body>
