@@ -4,96 +4,94 @@
     <meta charset="UTF-8">
     <title>HoneyLemonAI Pro</title>
     <style>
-        :root {
-            --hl-yellow: #f1c40f;
-            --hl-blue: #00d2ff;
-            --sidebar-bg: #f8f9fa;
-        }
-
-        body { font-family: 'Hiragino Sans', sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; color: #333; }
+        :root { --hl-yellow: #f1c40f; --hl-blue: #00d2ff; --sidebar-bg: #f8f9fa; }
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; }
 
         /* サイドバー */
-        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid #eee; display: flex; flex-direction: column; padding: 20px; }
-        .btn-new { background: transparent; border: 1px solid #ccc; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; text-align: left; }
-        .btn-new:hover { background: #eee; }
-        .logo-box { background: var(--hl-yellow); color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-weight: 900; font-size: 1.2rem; margin-bottom: 25px; }
-        .logo-box span { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle; }
-        .history-label { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
-
-        /* メインエリア */
-        .main { flex: 1; display: flex; flex-direction: column; }
-        .top-bar { padding: 15px 25px; border-bottom: 1px solid #eee; display: flex; gap: 15px; align-items: center; }
-        .model-tag { padding: 6px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
-        .model-tag.active { border-color: var(--hl-yellow); background: #fffde7; font-weight: bold; }
-
-        /* チャット表示エリア */
-        #chat-window { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+        .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid #eee; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+        .logo-box { background: var(--hl-yellow); color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-weight: 900; margin-bottom: 20px; }
         
-        /* 吹き出しCSS */
-        .msg { position: relative; max-width: 75%; padding: 15px 20px; border-radius: 18px; line-height: 1.6; }
+        /* 設定セクション */
+        .config-group { margin-bottom: 15px; border-top: 1px solid #ddd; padding-top: 15px; }
+        label { font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        select, textarea, input[type="range"] { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem; }
+        textarea { height: 60px; resize: none; }
+
+        /* メイン */
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .top-bar { padding: 10px 20px; border-bottom: 1px solid #eee; display: flex; gap: 10px; }
+        .model-tag { padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 0.8rem; }
+        .model-tag.active { background: #fffde7; border-color: var(--hl-yellow); font-weight: bold; }
+
+        #chat-window { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 80%; padding: 12px 18px; border-radius: 18px; line-height: 1.5; }
         .user { align-self: flex-end; background: #e0f7fa; border: 2px solid var(--hl-blue); border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: #fffde7; border: 2px solid var(--hl-yellow); border-bottom-left-radius: 2px; }
-        
-        /* 入力エリア */
-        .input-container { padding: 20px 30px; border-top: 1px solid #eee; }
-        .input-wrapper { display: flex; align-items: center; gap: 12px; border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
-        
-        .icon-btn { width: 32px; height: 32px; border: 2px solid var(--hl-blue); border-radius: 50%; cursor: pointer; position: relative; flex-shrink: 0; }
-        .icon-btn::after { content: ""; position: absolute; width: 12px; height: 2px; background: var(--hl-blue); top: 14px; left: 8px; transform: rotate(45deg); box-shadow: 0 4px 0 var(--hl-blue); }
 
-        textarea { flex: 1; border: none; outline: none; font-size: 1rem; resize: none; height: 24px; }
-        .btn-send { background: white; border: 1px solid #333; padding: 6px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        /* 入力エリア */
+        .input-area { padding: 20px; border-top: 1px solid #eee; }
+        .input-wrap { display: flex; align-items: center; gap: 10px; border: 1px solid #ddd; border-radius: 10px; padding: 10px; }
+        .clip { width: 20px; height: 20px; border: 2px solid var(--hl-blue); border-radius: 50%; cursor: pointer; }
+        textarea#userInput { flex: 1; border: none; outline: none; height: 24px; font-size: 1rem; }
+        button { background: white; border: 1px solid #333; padding: 5px 15px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <button class="btn-new" onclick="createNewChat()">チャットを新規作成</button>
     <div class="logo-box">HoneyLemonAI <span>Pro</span></div>
-    <div class="history-label">履歴</div>
-    <div id="history-list"></div>
+    
+    <div class="config-group">
+        <label>性格設定 (Persona)</label>
+        <textarea id="persona" placeholder="例: 親切なAIアシスタントとして。"></textarea>
+    </div>
+
+    <div class="config-group">
+        <label>モード</label>
+        <select id="mode">
+            <option value="簡潔に答えて。">高速モード</option>
+            <option value="丁寧かつ論理的に。">自動モード</option>
+            <option value="専門的な視点で詳細に。">研究者モード</option>
+        </select>
+    </div>
+
+    <div class="config-group">
+        <label>レート (最大トークン): <span id="rVal">1000</span></label>
+        <input type="range" id="rate" min="100" max="4000" step="100" value="1000" oninput="rVal.innerText=this.value">
+    </div>
+
+    <button onclick="localStorage.removeItem('HL_PRO_LOG');location.reload();" style="margin-top:20px; font-size:0.7rem;">履歴クリア</button>
 </div>
 
 <div class="main">
     <div class="top-bar">
-        <div class="model-tag" onclick="changeModel('llama-3.1-8b-instant', this)"># HoneyLemonAI-nano</div>
-        <div class="model-tag active" onclick="changeModel('llama-3.3-70b-versatile', this)"># standard</div>
-        <div class="model-tag" onclick="changeModel('llama-3.1-405b-reasoning', this)">● HoneyLemonAI Pro</div>
+        <div class="model-tag" onclick="changeM('llama-3.1-8b-instant',this)"># nano</div>
+        <div class="model-tag active" onclick="changeM('llama-3.3-70b-versatile',this)"># standard</div>
+        <div class="model-tag" onclick="changeM('llama-3.1-405b-reasoning',this)">● Pro</div>
     </div>
-
     <div id="chat-window"></div>
-
-    <div class="input-container">
-        <div class="input-wrapper">
-            <div class="icon-btn" onclick="document.getElementById('file-in').click()"></div>
-            <input type="file" id="file-in" style="display:none">
-            <textarea id="userInput" placeholder="チャットを始めましょう"></textarea>
-            <button class="btn-send" onclick="ask()">送信</button>
+    <div class="input-area">
+        <div class="input-wrap">
+            <div class="clip" onclick="document.getElementById('file').click()"></div>
+            <input type="file" id="file" style="display:none">
+            <textarea id="userInput" placeholder="メッセージを入力..."></textarea>
+            <button onclick="ask()">送信</button>
         </div>
     </div>
 </div>
 
 <script>
-    let currentModel = 'llama-3.3-70b-versatile';
-    let chatHistory = JSON.parse(localStorage.getItem('HL_PRO_LOG')) || [];
+    let model = 'llama-3.3-70b-versatile';
+    let logs = JSON.parse(localStorage.getItem('HL_PRO_LOG')) || [];
 
     function init() {
-        chatHistory.forEach(m => addMsg(m.text, m.type, false));
+        logs.forEach(l => render(l.text, l.type));
     }
 
-    function changeModel(m, el) {
-        currentModel = m;
+    function changeM(m, e) {
+        model = m;
         document.querySelectorAll('.model-tag').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function createNewChat() {
-        if(confirm("現在のチャットをリセットしますか？")) {
-            chatHistory = [];
-            localStorage.removeItem('HL_PRO_LOG');
-            document.getElementById('chat-window').innerHTML = '';
-            addMsg("新しいチャットを開始しました。", "ai", false);
-        }
+        e.classList.add('active');
     }
 
     async function ask() {
@@ -101,41 +99,39 @@
         const text = input.value.trim();
         if(!text) return;
 
-        addMsg(text, 'user');
+        render(text, 'user');
         input.value = '';
-        const aiMsg = addMsg("...", 'ai', false);
+        const aiMsg = render("...", 'ai');
 
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
-                body: JSON.stringify({ prompt: text, model: currentModel })
+                body: JSON.stringify({
+                    prompt: text,
+                    model: model,
+                    systemPrompt: `${document.getElementById('persona').value}\n${document.getElementById('mode').value}`,
+                    maxTokens: document.getElementById('rate').value
+                })
             });
             const data = await res.json();
             const reply = data.choices[0].message.content;
-            
             aiMsg.innerText = reply;
-            chatHistory.push({text: reply, type: 'ai'});
-            localStorage.setItem('HL_PRO_LOG', JSON.stringify(chatHistory));
+            logs.push({text: text, type: 'user'}, {text: reply, type: 'ai'});
+            localStorage.setItem('HL_PRO_LOG', JSON.stringify(logs));
         } catch (e) {
-            aiMsg.innerText = "エラーが発生しました。Vercelの環境変数を確認してください。";
+            aiMsg.innerText = "エラー。Vercel設定を確認して。";
         }
     }
 
-    function addMsg(text, type, save = true) {
+    function render(t, type) {
         const div = document.createElement('div');
         div.className = `msg ${type}`;
-        div.innerText = text;
+        div.innerText = t;
         const win = document.getElementById('chat-window');
         win.appendChild(div);
         win.scrollTop = win.scrollHeight;
-        
-        if(save) {
-            chatHistory.push({text, type});
-            localStorage.setItem('HL_PRO_LOG', JSON.stringify(chatHistory));
-        }
         return div;
     }
-
     init();
 </script>
 </body>
