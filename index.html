@@ -2,150 +2,140 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HoneyLemonAI</title>
+    <title>HoneyLemonAI Pro</title>
     <style>
-        :root { --hl-yellow: #f1c40f; --bg: #fffef2; --panel: #ffffff; --text: #333; }
-        [data-theme="black"] { --bg: #000; --panel: #1a1a1a; --text: #fff; }
-        [data-theme="light"] { --bg: #f5f5f5; --panel: #fff; --text: #222; }
+        :root {
+            --hl-yellow: #f1c40f;
+            --hl-blue: #00d2ff;
+            --sidebar-bg: #f8f9fa;
+        }
 
-        body { font-family: sans-serif; margin: 0; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-        
-        /* サイドパネル */
-        .sidebar { width: 300px; background: var(--panel); border-right: 2px solid var(--hl-yellow); padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-        .logo { font-size: 1.5rem; font-weight: 900; color: var(--hl-yellow); text-align: center; border-bottom: 3px solid var(--hl-yellow); padding-bottom: 10px; }
-        
-        .section { display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; }
-        label { font-weight: bold; color: var(--hl-yellow); }
-        select, input, textarea { padding: 8px; border: 1px solid #ddd; border-radius: 6px; background: var(--bg); color: var(--text); }
+        body { font-family: 'Hiragino Sans', sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; color: #333; }
 
-        /* チャットエリア */
+        /* サイドバー */
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid #eee; display: flex; flex-direction: column; padding: 20px; }
+        .btn-new { background: transparent; border: 1px solid #ccc; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; text-align: left; }
+        .btn-new:hover { background: #eee; }
+        .logo-box { background: var(--hl-yellow); color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-weight: 900; font-size: 1.2rem; margin-bottom: 25px; }
+        .logo-box span { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; vertical-align: middle; }
+        .history-label { font-size: 0.8rem; color: #888; margin-bottom: 10px; }
+
+        /* メインエリア */
         .main { flex: 1; display: flex; flex-direction: column; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; line-height: 1.6; }
-        .user { align-self: flex-end; background: var(--hl-yellow); color: white; }
-        .ai { align-self: flex-start; background: var(--panel); border-left: 4px solid var(--hl-yellow); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .top-bar { padding: 15px 25px; border-bottom: 1px solid #eee; display: flex; gap: 15px; align-items: center; }
+        .model-tag { padding: 6px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+        .model-tag.active { border-color: var(--hl-yellow); background: #fffde7; font-weight: bold; }
 
-        .input-box { padding: 20px; background: var(--panel); display: flex; gap: 10px; }
-        textarea#userInput { flex: 1; height: 50px; resize: none; }
-        button { background: var(--hl-yellow); color: white; border: none; border-radius: 8px; padding: 0 20px; cursor: pointer; font-weight: bold; }
+        /* チャット表示エリア */
+        #chat-window { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* 吹き出しCSS */
+        .msg { position: relative; max-width: 75%; padding: 15px 20px; border-radius: 18px; line-height: 1.6; }
+        .user { align-self: flex-end; background: #e0f7fa; border: 2px solid var(--hl-blue); border-bottom-right-radius: 2px; }
+        .ai { align-self: flex-start; background: #fffde7; border: 2px solid var(--hl-yellow); border-bottom-left-radius: 2px; }
+        
+        /* 入力エリア */
+        .input-container { padding: 20px 30px; border-top: 1px solid #eee; }
+        .input-wrapper { display: flex; align-items: center; gap: 12px; border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
+        
+        .icon-btn { width: 32px; height: 32px; border: 2px solid var(--hl-blue); border-radius: 50%; cursor: pointer; position: relative; flex-shrink: 0; }
+        .icon-btn::after { content: ""; position: absolute; width: 12px; height: 2px; background: var(--hl-blue); top: 14px; left: 8px; transform: rotate(45deg); box-shadow: 0 4px 0 var(--hl-blue); }
+
+        textarea { flex: 1; border: none; outline: none; font-size: 1rem; resize: none; height: 24px; }
+        .btn-send { background: white; border: 1px solid #333; padding: 6px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="logo">HoneyLemonAI</div>
-    
-    <div class="section">
-        <label>AIモデル</label>
-        <select id="model">
-            <option value="llama-3.1-8b-instant">nano (高速)</option>
-            <option value="llama-3.3-70b-versatile" selected>Standard</option>
-            <option value="llama-3.1-405b-reasoning">Pro (最強)</option>
-        </select>
-    </div>
-
-    <div class="section">
-        <label>性格設定</label>
-        <textarea id="persona" placeholder="例: ツンデレなハニーレモン妖精として振る舞って。"></textarea>
-    </div>
-
-    <div class="section">
-        <label>モード / 思考の深さ</label>
-        <select id="mode">
-            <option value="簡潔に、結論から答えて。">高速モード</option>
-            <option value="論理的かつ親切に解説して。">自動モード</option>
-            <option value="多角的な視点から、詳細な論文形式で考察して。">研究者モード</option>
-        </select>
-    </div>
-
-    <div class="section">
-        <label>最大レート（トークン数）: <span id="rateVal">500</span></label>
-        <input type="range" id="rate" min="100" max="4000" step="100" value="500" oninput="rateVal.innerText=this.value">
-    </div>
-
-    <div class="section">
-        <label>テーマ</label>
-        <select id="theme" onchange="applyTheme(this.value)">
-            <option value="system">システム同期</option>
-            <option value="light">ライト</option>
-            <option value="black">ブラック</option>
-        </select>
-    </div>
-
-    <button onclick="clearHistory()" style="background:#e74c3c; padding:10px;">履歴をリセット</button>
+    <button class="btn-new" onclick="createNewChat()">チャットを新規作成</button>
+    <div class="logo-box">HoneyLemonAI <span>Pro</span></div>
+    <div class="history-label">履歴</div>
+    <div id="history-list"></div>
 </div>
 
 <div class="main">
+    <div class="top-bar">
+        <div class="model-tag" onclick="changeModel('llama-3.1-8b-instant', this)"># HoneyLemonAI-nano</div>
+        <div class="model-tag active" onclick="changeModel('llama-3.3-70b-versatile', this)"># standard</div>
+        <div class="model-tag" onclick="changeModel('llama-3.1-405b-reasoning', this)">● HoneyLemonAI Pro</div>
+    </div>
+
     <div id="chat-window"></div>
-    <div class="input-box">
-        <textarea id="userInput" placeholder="メッセージを入力..."></textarea>
-        <button id="sendBtn" onclick="ask()">送信</button>
+
+    <div class="input-container">
+        <div class="input-wrapper">
+            <div class="icon-btn" onclick="document.getElementById('file-in').click()"></div>
+            <input type="file" id="file-in" style="display:none">
+            <textarea id="userInput" placeholder="チャットを始めましょう"></textarea>
+            <button class="btn-send" onclick="ask()">送信</button>
+        </div>
     </div>
 </div>
 
 <script>
-    let history = JSON.parse(localStorage.getItem('HL_LOG')) || [];
+    let currentModel = 'llama-3.3-70b-versatile';
+    let chatHistory = JSON.parse(localStorage.getItem('HL_PRO_LOG')) || [];
 
     function init() {
-        history.forEach(m => renderMsg(m.txt, m.type));
-        applyTheme(localStorage.getItem('HL_THEME') || 'system');
+        chatHistory.forEach(m => addMsg(m.text, m.type, false));
     }
 
-    function renderMsg(txt, type) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = txt;
-        const win = document.getElementById('chat-window');
-        win.appendChild(div);
-        win.scrollTop = win.scrollHeight;
+    function changeModel(m, el) {
+        currentModel = m;
+        document.querySelectorAll('.model-tag').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
     }
 
-    function applyTheme(t) {
-        localStorage.setItem('HL_THEME', t);
-        document.getElementById('theme').value = t;
-        const dark = t === 'black' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.setAttribute('data-theme', dark ? 'black' : 'light');
+    function createNewChat() {
+        if(confirm("現在のチャットをリセットしますか？")) {
+            chatHistory = [];
+            localStorage.removeItem('HL_PRO_LOG');
+            document.getElementById('chat-window').innerHTML = '';
+            addMsg("新しいチャットを開始しました。", "ai", false);
+        }
     }
 
     async function ask() {
         const input = document.getElementById('userInput');
         const text = input.value.trim();
-        if(!text || document.getElementById('sendBtn').disabled) return;
+        if(!text) return;
 
-        renderMsg(text, 'user');
-        history.push({txt: text, type: 'user'});
+        addMsg(text, 'user');
         input.value = '';
-
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'msg ai';
-        aiMsg.innerText = "...";
-        document.getElementById('chat-window').appendChild(aiMsg);
-        
-        document.getElementById('sendBtn').disabled = true;
+        const aiMsg = addMsg("...", 'ai', false);
 
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
-                body: JSON.stringify({
-                    prompt: text,
-                    model: document.getElementById('model').value,
-                    systemPrompt: `${document.getElementById('persona').value}\n${document.getElementById('mode').value}`,
-                    maxTokens: document.getElementById('rate').value
-                })
+                body: JSON.stringify({ prompt: text, model: currentModel })
             });
             const data = await res.json();
             const reply = data.choices[0].message.content;
+            
             aiMsg.innerText = reply;
-            history.push({txt: reply, type: 'ai'});
-            localStorage.setItem('HL_LOG', JSON.stringify(history));
+            chatHistory.push({text: reply, type: 'ai'});
+            localStorage.setItem('HL_PRO_LOG', JSON.stringify(chatHistory));
         } catch (e) {
-            aiMsg.innerText = "エラーが発生しました。設定を見直してください。";
-        } finally {
-            document.getElementById('sendBtn').disabled = false;
+            aiMsg.innerText = "エラーが発生しました。Vercelの環境変数を確認してください。";
         }
     }
 
-    function clearHistory() { if(confirm("消す？")) { localStorage.removeItem('HL_LOG'); location.reload(); } }
+    function addMsg(text, type, save = true) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerText = text;
+        const win = document.getElementById('chat-window');
+        win.appendChild(div);
+        win.scrollTop = win.scrollHeight;
+        
+        if(save) {
+            chatHistory.push({text, type});
+            localStorage.setItem('HL_PRO_LOG', JSON.stringify(chatHistory));
+        }
+        return div;
+    }
+
     init();
 </script>
 </body>
