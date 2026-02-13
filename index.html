@@ -10,73 +10,74 @@
         
         /* サイドバー */
         .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
-        .logo { font-weight: bold; color: var(--lemon); font-size: 1.1rem; }
-        textarea, select { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
-        .btn-clear { background: #ea4335; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: auto; }
+        .logo { font-weight: bold; color: var(--lemon); font-size: 1.2rem; margin-bottom: 10px; }
+        textarea { width: 100%; height: 100px; background: var(--bg); color: var(--txt); border: 1px solid var(--border); border-radius: 8px; padding: 10px; resize: none; }
+        .btn-clear { background: #ea4335; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: auto; font-weight: bold; }
 
-        /* メインエリア */
+        /* メインチャット */
         .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
-        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .msg { line-height: 1.6; white-space: pre-wrap; font-size: 1rem; }
-        .user { color: var(--blue); font-weight: bold; }
-        .gen-img { width: 100%; max-width: 512px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+        .msg { line-height: 1.6; white-space: pre-wrap; font-size: 1rem; position: relative; }
+        .user { color: var(--blue); font-weight: bold; border-left: 4px solid var(--blue); padding-left: 10px; }
+        .ai { border-left: 4px solid var(--lemon); padding-left: 10px; }
+        .gen-img { width: 100%; max-width: 600px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
         /* 入力エリア */
-        .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; }
-        #in { flex: 1; min-width: 200px; padding: 12px 20px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--bg); color: var(--txt); }
-        .btn { padding: 0 20px; border-radius: 20px; cursor: pointer; border: none; font-weight: bold; height: 45px; transition: 0.2s; }
+        .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-wrap: wrap; background: var(--bg); }
+        #in { flex: 1; min-width: 200px; padding: 12px 20px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--side); color: var(--txt); font-size: 1rem; }
+        .btn { padding: 0 25px; border-radius: 30px; cursor: pointer; border: none; font-weight: bold; height: 48px; transition: 0.2s; }
         .btn-text { background: var(--blue); color: #fff; }
         .btn-img { background: var(--lemon); color: #1f1f1f; }
-        .btn:active { transform: scale(0.95); }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
     <div class="logo">HoneyLemonAI Pro</div>
-    <label style="font-size: 0.8rem;">性格設定</label>
-    <textarea id="persona">親切なアシスタント。</textarea>
+    <label style="font-size: 0.8rem; font-weight: bold;">AIの性格設定</label>
+    <textarea id="persona">親切なアシスタント。簡潔に答えてください。</textarea>
     
-    <label style="font-size: 0.8rem;">テーマ</label>
-    <select onchange="document.documentElement.setAttribute('data-theme', this.value)">
-        <option value="light">ライト</option>
-        <option value="black">ブラック</option>
+    <label style="font-size: 0.8rem; font-weight: bold;">表示モード</label>
+    <select onchange="document.documentElement.setAttribute('data-theme', this.value)" style="padding: 5px; border-radius: 5px;">
+        <option value="light">ライトモード</option>
+        <option value="black">ダークモード</option>
     </select>
 
-    <button class="btn-clear" onclick="clearChat()">履歴削除</button>
+    <button class="btn-clear" onclick="clearChat()">履歴をすべて削除</button>
 </aside>
 
 <main class="main">
     <div id="chat"></div>
     <div class="input-area">
-        <input type="text" id="in" placeholder="メッセージ、または画像のお題..." onkeypress="if(event.key==='Enter')sendText()">
+        <input type="text" id="in" placeholder="質問、または画像のお題を入力..." onkeypress="if(event.key==='Enter')sendText()">
         <button class="btn btn-text" onclick="sendText()">送信</button>
-        <button class="btn btn-img" onclick="generateImage()">画像を生成</button>
+        <button class="btn btn-img" onclick="fetchImage()">画像を表示</button>
     </div>
 </main>
 
 <script>
-    let isGenerating = false;
+    let isBusy = false;
 
-    // 起動時に履歴を復元
+    // 履歴復元
     window.onload = () => {
-        const saved = localStorage.getItem('hl_pro_history_v2');
+        const saved = localStorage.getItem('hl_pro_v3');
         if (saved) {
             document.getElementById('chat').innerHTML = saved;
             scroll();
         }
     };
 
-    // テキスト送信
+    // テキストチャット送信
     async function sendText() {
         const input = document.getElementById('in');
         const text = input.value.trim();
-        if (!text || isGenerating) return;
+        if (!text || isBusy) return;
 
         render(text, 'user');
         input.value = '';
-        const aiMsg = render("...", 'ai');
-        isGenerating = true;
+        const aiMsg = render("考え中...", 'ai');
+        isBusy = true;
 
         try {
             const res = await fetch('/api/chat', {
@@ -84,53 +85,49 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: text,
-                    systemPrompt: "メタ発言禁止。自然な日本語で回答。\n" + document.getElementById('persona').value
+                    systemPrompt: "メタ発言（プロンプトへの言及）は厳禁です。自然な日本語で回答してください。語尾に『レモン』等は付けないでください。\n設定：" + document.getElementById('persona').value
                 })
             });
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
             save();
         } catch (e) {
-            aiMsg.innerText = "エラー: サーバーに接続できません。";
+            aiMsg.innerText = "エラー：APIの応答がありません。";
         } finally {
-            isGenerating = false;
+            isBusy = false;
             scroll();
         }
     }
 
-    // 画像生成（ボタン専用）
-    async function generateImage() {
+    // Pexels API経由の画像取得
+    async function fetchImage() {
         const input = document.getElementById('in');
         const text = input.value.trim();
-        if (!text || isGenerating) return;
+        if (!text || isBusy) return;
 
-        render(text + "（画像生成中）", 'user');
+        render(text + "（画像リクエスト）", 'user');
         input.value = '';
-        const aiMsg = render("画像を生成しています...", 'ai');
-        isGenerating = true;
+        const aiMsg = render("Pexelsから高品質な画像を取得中...", 'ai');
+        isBusy = true;
 
-        const seed = Math.floor(Math.random() * 1000000);
-        const url = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+        // Vercelの /api/image 経由で取得（APIキーを隠蔽）
+        const proxyUrl = `/api/image?prompt=${encodeURIComponent(text)}`;
         
         const img = document.createElement('img');
         img.className = 'gen-img';
-        img.src = url;
+        img.src = proxyUrl;
 
         img.onload = () => {
-            aiMsg.innerText = "画像を生成しました：";
+            aiMsg.innerText = "画像を取得しました：";
             aiMsg.appendChild(img);
-            isGenerating = false;
-            save(); // 完了時に保存
+            isBusy = false;
+            save();
             scroll();
         };
 
         img.onerror = () => {
-            aiMsg.innerHTML = `
-                <span style="color:red;">画像の取得に失敗しました。</span><br>
-                <a href="${url}" target="_blank" style="color:var(--blue); font-size:0.8rem;">[URLを直接開いてみる]</a>
-            `;
-            isGenerating = false;
-            save();
+            aiMsg.innerText = "指定されたキーワードの画像が見つかりませんでした。";
+            isBusy = false;
             scroll();
         };
     }
@@ -144,21 +141,9 @@
         return d;
     }
 
-    function save() {
-        localStorage.setItem('hl_pro_history_v2', document.getElementById('chat').innerHTML);
-    }
-
-    function scroll() {
-        const c = document.getElementById('chat');
-        c.scrollTop = c.scrollHeight;
-    }
-
-    function clearChat() {
-        if (confirm("履歴を削除しますか？")) {
-            localStorage.removeItem('hl_pro_history_v2');
-            document.getElementById('chat').innerHTML = '';
-        }
-    }
+    function save() { localStorage.setItem('hl_pro_v3', document.getElementById('chat').innerHTML); }
+    function scroll() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
+    function clearChat() { if(confirm("履歴を削除しますか？")){ localStorage.removeItem('hl_pro_v3'); location.reload(); } }
 </script>
 </body>
 </html>
