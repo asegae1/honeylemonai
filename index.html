@@ -59,18 +59,36 @@
         render(text, 'user');
         input.value = '';
 
-        // 画像生成の判定
-        if (text.match(/(画像|絵|写真).*(作って|描いて|生成|見せて)/)) {
-            const aiMsg = render("画像を生成しています...", 'ai');
-            const seed = Math.floor(Math.random() * 100000);
-            const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&nologo=true`;
-            
-            const img = document.createElement('img');
-            img.src = imageUrl;
-            img.className = 'gen-img';
-            img.onload = () => { aiMsg.innerText = "生成が完了しました。"; aiMsg.appendChild(img); };
-            return;
-        }
+// script.js の画像生成部分を以下に差し替え
+if (text.match(/(画像|絵|写真|イラスト).*(作って|描いて|生成|見せて)/)) {
+    const aiMsg = render("画像を生成中...", 'ai');
+    const seed = Math.floor(Math.random() * 100000);
+    // パラメータに &nologo=true を追加して軽量化
+    const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+    
+    // 修正：onloadを待たずに、imgタグを即座に生成してブラウザに任せる
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.width = "100%";
+    img.style.maxWidth = "512px";
+    img.style.borderRadius = "10px";
+    img.style.marginTop = "10px";
+    img.style.display = "block";
+    img.alt = "生成中...";
+
+    // 読み込み完了後にメッセージを更新
+    img.onload = () => {
+        aiMsg.firstChild.textContent = "生成が完了しました。";
+    };
+    // 5分も待たせないためのエラー処理
+    img.onerror = () => {
+        aiMsg.innerText = "画像の生成に失敗しました。もう一度試してください。";
+    };
+
+    aiMsg.appendChild(img);
+    isGenerating = false;
+    return;
+}
 
         // 通常のテキスト回答
         const aiMsg = render("...", 'ai');
