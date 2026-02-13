@@ -1,66 +1,78 @@
-// api/chat.js
-let chats = JSON.parse(localStorage.getItem('lemon_chats_v2') || '{}');
-let currentChatId = null;
+let chats = JSON.parse(localStorage.getItem('lemon_v3') || '{}');
+let currentId = null;
 
-// モデルの読み込み確認
 function init() {
-  const select = document.getElementById('modelSelect');
-  if (window.HoneyLemonModels) {
-    Object.keys(window.HoneyLemonModels).forEach(key => {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.innerText = key;
-      select.appendChild(opt);
-    });
-  }
+    const sel = document.getElementById('modelSelect');
+    if (window.HoneyLemonModels) {
+        Object.keys(window.HoneyLemonModels).forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m; opt.innerText = m;
+            sel.appendChild(opt);
+        });
+    }
+    renderHistory();
 }
 
 async function run() {
-  const input = document.getElementById('input');
-  if (!input.value) return;
-  if (!currentChatId) createNewChat();
+    const input = document.getElementById('input');
+    const lang = document.getElementById('langSelect').value;
+    const model = window.HoneyLemonModels[document.getElementById('modelSelect').value];
+    const batch = parseInt(document.getElementById('batchSelect').value);
+    
+    if (!input.value) return;
+    if (!currentId) createNewChat();
 
-  const userText = input.value;
-  const modelKey = document.getElementById('modelSelect').value;
-  const model = window.HoneyLemonModels[modelKey];
-  const batch = parseInt(document.getElementById('batchSelect').value);
+    const text = input.value;
+    addMsg(text, 'user');
+    chats[currentId].messages.push({ text, type: 'user' });
+    input.value = "";
 
-  // 画面表示とデータ保存
-  displayMessage(userText, 'user');
-  chats[currentChatId].messages.push({ text: userText, type: 'user' });
-  input.value = "";
+    // 言語設定による分岐
+    const responseBase = lang === 'en' ? "This is a response in English." : "日本語での回答です。";
 
-  // PERSONALITY（隠し性格）と性格設定を結合して「分裂」実行
-  for (let i = 0; i < batch; i++) {
-    const aiResponse = `[${model.Models}] ${userText} に対する ${document.getElementById('personalityInput').value || '標準'} な回答です。`;
-    displayMessage(aiResponse, 'ai');
-    chats[currentChatId].messages.push({ text: aiResponse, type: 'ai' });
-  }
-  save();
+    for (let i = 0; i < batch; i++) {
+        // PERSONALITY（隠し性格）を考慮したシミュレーション
+        const aiText = `[${model.Models}] ${responseBase}\n設定: ${model.PERSONALITY}`;
+        addMsg(aiText, 'ai');
+        chats[currentId].messages.push({ text: aiText, type: 'ai' });
+    }
+    save();
 }
 
-function displayMessage(text, type) {
-  const box = document.getElementById('chat-box');
-  const d = document.createElement('div');
-  d.style.margin = "10px 0";
-  d.style.padding = "10px 15px";
-  d.style.borderRadius = "10px";
-  d.style.maxWidth = "80%";
-  d.style.background = type === 'user' ? '#FFD700' : '#fff';
-  d.style.alignSelf = type === 'user' ? 'flex-end' : 'flex-start';
-  d.innerText = text;
-  box.appendChild(d);
-  box.scrollTop = box.scrollHeight;
+function addMsg(text, type) {
+    const box = document.getElementById('chat-box');
+    const d = document.createElement('div');
+    d.className = `msg ${type}`;
+    d.innerText = text;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
 }
 
 function createNewChat() {
-  currentChatId = Date.now();
-  chats[currentChatId] = { title: "新しい会話", messages: [] };
-  save();
+    currentId = Date.now();
+    chats[currentId] = { title: "新しい会話", messages: [] };
+    save();
+    renderChat();
 }
 
-function save() {
-  localStorage.setItem('lemon_chats_v2', JSON.stringify(chats));
+function renderChat() {
+    const box = document.getElementById('chat-box');
+    box.innerHTML = "";
+    if (currentId && chats[currentId]) {
+        chats[currentId].messages.forEach(m => addMsg(m.text, m.type));
+    }
 }
+
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = Object.keys(chats).reverse().map(id => `
+        <div class="history-item" onclick="loadChat('${id}')">
+            <span>${chats[id].title}</span>
+        </div>
+    `).join('');
+}
+
+function loadChat(id) { currentId = id; renderChat(); renderHistory(); }
+function save() { localStorage.setItem('lemon_v3', JSON.stringify(chats)); renderHistory(); }
 
 window.onload = init;
