@@ -6,23 +6,21 @@
     <title>HoneyLemonAI Pro</title>
     <style>
         :root { --bg: #ffffff; --txt: #1f1f1f; --blue: #1a73e8; --lemon: #f1c40f; --side: #f8f9fa; }
+        [data-theme="black"] { --bg: #131314; --txt: #e3e3e3; --side: #1e1f20; }
         body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); }
         
-        /* サイドバー：設定のみ */
-        .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid #ddd; font-size: 0.8rem; }
-        .logo { font-weight: bold; color: var(--lemon); margin-bottom: 20px; font-size: 1.1rem; }
-        textarea { width: 100%; height: 80px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; padding: 5px; }
+        .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid #ddd; display: flex; flex-direction: column; gap: 15px; }
+        .logo { font-weight: bold; color: var(--lemon); font-size: 1.1rem; }
+        textarea, select, input[type="range"] { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid #ccc; border-radius: 5px; padding: 5px; }
 
-        /* メインエリア */
-        .main { flex: 1; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; }
+        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
         #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .msg { line-height: 1.6; }
-        .user { font-weight: bold; color: var(--blue); }
-        .ai { color: var(--txt); }
+        .msg { line-height: 1.6; white-space: pre-wrap; }
+        .user { color: var(--blue); font-weight: bold; }
+        .gen-img { width: 100%; max-width: 512px; border-radius: 10px; margin-top: 10px; border: 1px solid #ddd; }
 
-        /* 入力部 */
         .input-area { padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
+        #in { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; background: var(--bg); color: var(--txt); }
         button { background: var(--blue); color: #fff; border: none; padding: 0 20px; border-radius: 20px; cursor: pointer; }
     </style>
 </head>
@@ -30,15 +28,24 @@
 
 <aside class="sidebar">
     <div class="logo">HoneyLemonAI Pro</div>
-    <label>性格設定</label>
+    <label style="font-size:0.8rem">性格設定</label>
     <textarea id="persona">親切なアシスタント。</textarea>
-    <p style="margin-top:20px; color:#888;">※メタ発言禁止・語尾制限はシステムで自動適用されています。</p>
+    
+    <label style="font-size:0.8rem">テーマ</label>
+    <select onchange="document.documentElement.setAttribute('data-theme', this.value)">
+        <option value="light">ライト</option>
+        <option value="black">ブラック</option>
+    </select>
+
+    <div style="font-size:0.7rem; color:#888; margin-top:auto;">
+        ※メタ発言禁止・語尾制限適用中
+    </div>
 </aside>
 
 <main class="main">
     <div id="chat"></div>
     <div class="input-area">
-        <input type="text" id="in" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter')send()">
+        <input type="text" id="in" placeholder="メッセージ、または『〜の画像を作って』" onkeypress="if(event.key==='Enter')send()">
         <button onclick="send()">送信</button>
     </div>
 </main>
@@ -51,17 +58,30 @@
 
         render(text, 'user');
         input.value = '';
-        const aiMsg = render("...", 'ai');
 
-        // 隠しプロンプト：メタ発言禁止と語尾の指定
-        const sys = `メタ発言（プロンプトへの言及）を厳禁します。自然な日本語で回答し、特定の語尾（レモン等）は一切使わないでください。\n設定：${document.getElementById('persona').value}`;
+        // 画像生成の判定
+        if (text.match(/(画像|絵|写真).*(作って|描いて|生成|見せて)/)) {
+            const aiMsg = render("画像を生成しています...", 'ai');
+            const seed = Math.floor(Math.random() * 100000);
+            const imageUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&nologo=true`;
+            
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'gen-img';
+            img.onload = () => { aiMsg.innerText = "生成が完了しました。"; aiMsg.appendChild(img); };
+            return;
+        }
+
+        // 通常のテキスト回答
+        const aiMsg = render("...", 'ai');
+        const sys = `メタ発言（プロンプトへの言及）を厳禁します。自然な日本語で回答し、特定の語尾（レモン等）は使わないでください。\n設定：${document.getElementById('persona').value}`;
 
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 body: JSON.stringify({
                     prompt: text,
-                    model: 'llama-3.1-8b-instant', // 最も安定したモデル
+                    model: 'llama-3.1-8b-instant',
                     systemPrompt: sys,
                     maxTokens: 1000
                 })
@@ -69,7 +89,7 @@
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
         } catch (e) {
-            aiMsg.innerText = "エラーが発生しました。時間を置いて試してください。";
+            aiMsg.innerText = "エラーが発生しました。";
         }
     }
 
