@@ -1,46 +1,76 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-  const { prompt, image, fileText, fileName } = req.body;
+let chats = JSON.parse(localStorage.getItem('lemon_chats_v2') || '{}');
+let currentChatId = null;
 
-  try {
-    if (image) {
-      // --- Gemini 1.5 Flash (視覚解析) ---
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: `あなたは画像解析のプロです。画像の中身を詳しく説明してください。命令: ${prompt || "この画像は何？"}` },
-              { inline_data: { mime_type: "image/png", data: image.split(',')[1] } }
-            ]
-          }]
-        })
-      });
-      const data = await response.json();
-      return res.status(200).json({ content: data.candidates[0].content.parts[0].text });
-    } else {
-      // --- Groq (テキスト解析) ---
-      // ここが重要：ファイルの中身がある場合、それを「システム設定」に近い形で強制的に読ませます
-      const finalPrompt = fileText 
-        ? `【最優先：以下のファイル内容を読み、それに基づいて回答してください】\nファイル名: ${fileName}\n---ファイル内容ここから---\n${fileText}\n---ファイル内容ここまで---\n\nユーザーの質問: ${prompt}`
-        : prompt;
+function initModels() {
+  const select = document.getElementById('modelSelect');
+  if (!window.HoneyLemonModels) return;
+  Object.keys(window.HoneyLemonModels).forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key; opt.innerText = key;
+    select.appendChild(opt);
+  });
+}
 
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: "あなたは提供されたファイルの内容を1行漏らさず正確に把握し、回答する専門家です。「名前から察するに」といった推測ではなく、内容に基づいて具体的に答えてください。" },
-            { role: "user", content: finalPrompt }
-          ]
-        })
-      });
-      const data = await response.json();
-      return res.status(200).json({ content: data.choices[0].message.content });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "解析エラーが発生しました。" });
+async function run() {
+  const input = document.getElementById('input');
+  if (!input.value) return;
+  if (!currentChatId) createNewChat();
+
+  const userText = input.value;
+  const batchCount = parseInt(document.getElementById('batchSelect').value);
+  const selectedModel = window.HoneyLemonModels[document.getElementById('modelSelect').value];
+  
+  chats[currentChatId].messages.push({ text: userText, type: 'user' });
+  if(chats[currentChatId].title === "新しい会話") chats[currentChatId].title = userText.substring(0, 10);
+  renderChat();
+  input.value = "";
+
+  const box = document.getElementById('chat-box');
+  const group = document.createElement('div');
+  group.className = `response-group batch-${batchCount}`;
+  box.appendChild(group);
+
+  // 重要：隠し性格(PERSONALITY)をシステム命令に組み込む
+  const hiddenCore = selectedModel.PERSONALITY;
+  const surfaceTone = document.getElementById('personalityInput').value;
+  const length = document.getElementById('lengthSelect').value;
+
+  for (let i = 0; i < batchCount; i++) {
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'msg ai';
+    aiDiv.innerText = `${selectedModel.Models} 思考中...`;
+    group.appendChild(aiDiv);
+
+    // 擬似API実行
+    setTimeout(() => {
+      const response = `[Core: ${hiddenCore.substring(0,10)}...] ${surfaceTone || '標準'}な回答です。`;
+      aiDiv.innerText = response;
+      chats[currentChatId].messages.push({ text: response, type: 'ai' });
+      save();
+    }, 600 + (i * 200));
   }
 }
+
+function renderChat() {
+  const box = document.getElementById('chat-box'); box.innerHTML = "";
+  if (currentChatId && chats[currentChatId]) {
+    chats[currentChatId].messages.forEach(m => {
+      const d = document.createElement('div'); d.className = `msg ${m.type}`; d.innerText = m.text; box.appendChild(d);
+    });
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function createNewChat() { currentChatId = Date.now(); chats[currentChatId] = { title: "新しい会話", messages: [] }; save(); renderChat(); }
+function loadChat(id) { currentChatId = id; renderChat(); renderHistory(); }
+function save() { localStorage.setItem('lemon_chats_v2', JSON.stringify(chats)); renderHistory(); }
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = Object.keys(chats).reverse().map(id => `
+    <div class="history-item ${id == currentChatId ? 'active' : ''}" onclick="loadChat('${id}')">
+      <span>${chats[id].title}</span>
+    </div>
+  `).join('');
+}
+
+window.onload = () => { initModels(); if (Object.keys(chats).length > 0) loadChat(Object.keys(chats).reverse()[0]); else createNewChat(); };
