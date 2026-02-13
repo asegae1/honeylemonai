@@ -10,14 +10,13 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: body.model || "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: "あなたはHoneyLemonAIです。親切に日本語で回答してください。" },
+          { role: "system", content: body.systemPrompt || "あなたはHoneyLemonAIです。" },
           { role: "user", content: body.prompt }
         ],
-        max_tokens: body.maxTokens || 1000
+        max_tokens: parseInt(body.maxTokens) || 1000
       })
     });
     const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
     res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
