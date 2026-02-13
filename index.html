@@ -7,7 +7,7 @@
   <style>
     :root { 
       --main: #FFD700; --accent: #FFA500; --bg: #fffdf0; --panel: #ffffff; --sidebar: #f7f2d7; --txt: #333; 
-      --radius: 16px;
+      --radius: 16px; --code-bg: #282c34;
     }
     body.dark { 
       --main: #FFD700; --accent: #FF8C00; --bg: #0d0d0d; --panel: #1a1a1a; --sidebar: #121212; --txt: #f0f0f0; 
@@ -16,44 +16,50 @@
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--txt); margin: 0; height: 100vh; display: flex; transition: 0.3s; overflow: hidden; }
     
     /* --- Sidebar --- */
-    .sidebar { width: 260px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.05); }
+    .sidebar { width: 280px; background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.05); }
     .sidebar-header { padding: 20px; font-weight: 900; font-size: 20px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
     .history-list { flex: 1; overflow-y: auto; padding: 10px; }
+    
     .history-item { 
-      padding: 12px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; font-size: 13px; 
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(255,255,255,0.3);
-      transition: 0.2s; border: 1px solid transparent;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; font-size: 13px; 
+      background: rgba(255,255,255,0.3); transition: 0.2s; border: 1px solid transparent;
     }
     .history-item:hover { border-color: var(--main); background: var(--panel); }
-    .history-item.active { background: var(--main); color: #fff; font-weight: bold; }
+    .history-item.active { background: var(--main); color: #fff; }
+    .history-ops button { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px; }
 
     /* --- Main --- */
     .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .top-nav { background: var(--panel); padding: 15px 25px; border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 15px rgba(0,0,0,0.03); }
     .settings-grid { display: grid; grid-template-columns: 1fr 2fr 1.5fr 0.8fr; gap: 15px; align-items: center; }
+    .label-xs { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; display: block; }
     
-    .label-xs { font-size: 10px; font-weight: 800; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; display: block; }
     select, input[type="text"], input[type="range"] { width: 100%; background: var(--bg); color: var(--txt); border: 1.5px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 6px; outline: none; box-sizing: border-box;}
 
     #chat-box { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
-    .response-group { display: grid; gap: 15px; width: 100%; margin-bottom: 10px; }
-    .grid-2 { grid-template-columns: 1fr 1fr; }
-    .grid-4 { grid-template-columns: 1fr 1fr; }
-
-    .msg { padding: 18px; border-radius: var(--radius); font-size: 14px; line-height: 1.7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; max-width: 85%; }
+    .msg { padding: 18px; border-radius: var(--radius); font-size: 14px; line-height: 1.7; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 85%; }
     .user { align-self: flex-end; background: linear-gradient(135deg, var(--main), var(--accent)); color: white; border-bottom-right-radius: 4px; }
     .ai { align-self: flex-start; background: var(--panel); border-left: 5px solid var(--main); border-bottom-left-radius: 4px; }
+
+    /* --- Code Split View --- */
+    .code-block { 
+      background: var(--code-bg); color: #abb2bf; padding: 15px; border-radius: 10px; 
+      font-family: 'Consolas', monospace; font-size: 13px; overflow-x: auto; margin-top: 10px;
+      border: 1px solid #3e4451; position: relative;
+    }
+    .code-label { position: absolute; top: 0; right: 10px; font-size: 10px; color: #5c6370; }
 
     .input-wrapper { background: var(--panel); padding: 20px 40px; border-top: 1px solid rgba(0,0,0,0.05); }
     .input-row { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 15px; }
     #input { flex: 1; padding: 14px 25px; border-radius: 30px; border: 2px solid var(--bg); background: var(--bg); color: var(--txt); font-size: 15px; }
-    .lemon-btn { background: var(--main); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 22px; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .lemon-btn { background: var(--main); border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 22px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body class="light">
 
 <div class="sidebar">
-  <div class="sidebar-header">🍋 honeylemonai <button onclick="document.body.classList.toggle('dark')" style="border:none; background:none; cursor:pointer; font-size:18px;">🌓</button></div>
+  <div class="sidebar-header">🍋 honeylemonai <button onclick="document.body.classList.toggle('dark')">🌓</button></div>
   <div style="padding: 15px;"><button style="width:100%; padding:10px; border-radius:10px; border:none; background:var(--main); font-weight:bold; cursor:pointer;" onclick="createNewChat()">+ New Session</button></div>
   <div class="history-list" id="history-list"></div>
 </div>
@@ -62,7 +68,7 @@
   <div class="top-nav">
     <div class="settings-grid">
       <div><span class="label-xs">Language</span><select id="langSelect"><option value="ja">日本語</option><option value="en">English</option></select></div>
-      <div><span class="label-xs">Personality</span><input type="text" id="personalityInput" placeholder="例: 毒舌なレモン"></div>
+      <div><span class="label-xs">Personality</span><input type="text" id="personalityInput" placeholder="例: 毒舌レモン"></div>
       <div><span class="label-xs">Length: <span id="lenVal">1000</span></span><input type="range" id="lengthSelect" min="1000" max="7500" step="100" value="1000" oninput="document.getElementById('lenVal').innerText=this.value"></div>
       <div><span class="label-xs">Batch</span><select id="batchSelect"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select></div>
     </div>
@@ -75,12 +81,15 @@
   let chats = JSON.parse(localStorage.getItem('lemon_chats') || '{}');
   let currentChatId = null;
 
-  // 履歴の描画
   function renderHistory() {
     const list = document.getElementById('history-list');
     list.innerHTML = Object.keys(chats).reverse().map(id => `
       <div class="history-item ${id == currentChatId ? 'active' : ''}" onclick="loadChat('${id}')">
-        ${chats[id].title}
+        <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${chats[id].title}</span>
+        <div class="history-ops">
+          <button onclick="renameChat(event, '${id}')">📝</button>
+          <button onclick="deleteChat(event, '${id}')">🗑️</button>
+        </div>
       </div>
     `).join('');
   }
@@ -88,32 +97,57 @@
   function createNewChat() {
     currentChatId = Date.now();
     chats[currentChatId] = { title: "新しい会話", messages: [] };
-    saveToStorage();
+    saveAndRender();
     renderChat();
   }
 
-  function loadChat(id) {
-    currentChatId = id;
-    renderChat();
+  function renameChat(e, id) {
+    e.stopPropagation();
+    const newName = prompt("新しいタイトルを入力してください", chats[id].title);
+    if (newName) { chats[id].title = newName; saveAndRender(); }
   }
+
+  function deleteChat(e, id) {
+    e.stopPropagation();
+    if (confirm("この会話を削除しますか？")) {
+      delete chats[id];
+      if (currentChatId == id) currentChatId = null;
+      saveAndRender();
+      renderChat();
+    }
+  }
+
+  function loadChat(id) { currentChatId = id; renderChat(); renderHistory(); }
 
   function renderChat() {
-    const box = document.getElementById('chat-box');
-    box.innerHTML = "";
+    const box = document.getElementById('chat-box'); box.innerHTML = "";
     if (currentChatId && chats[currentChatId]) {
       chats[currentChatId].messages.forEach(m => addMsgToUI(m.text, m.type));
     }
-    renderHistory();
   }
 
-  function saveToStorage() {
-    localStorage.setItem('lemon_chats', JSON.stringify(chats));
-  }
+  function saveAndRender() { localStorage.setItem('lemon_chats', JSON.stringify(chats)); renderHistory(); }
 
+  // コード分裂ロジック付きのメッセージ追加
   function addMsgToUI(text, type, target = document.getElementById('chat-box')) {
     const d = document.createElement('div');
     d.className = `msg ${type}`;
-    d.innerText = text;
+    
+    // コードブロックの抽出 (```code```)
+    const parts = text.split(/```/);
+    parts.forEach((part, index) => {
+      if (index % 2 === 1) { // コード部分
+        const pre = document.createElement('div');
+        pre.className = 'code-block';
+        pre.innerHTML = `<span class="code-label">CODE</span><pre style="margin:0">${part.trim()}</pre>`;
+        d.appendChild(pre);
+      } else { // 通常テキスト
+        const span = document.createElement('span');
+        span.innerText = part;
+        d.appendChild(span);
+      }
+    });
+
     target.appendChild(d);
     target.scrollTop = target.scrollHeight;
   }
@@ -124,38 +158,21 @@
     const text = input.value;
     if (!text) return;
 
-    // ユーザー発言保存
     chats[currentChatId].messages.push({ text, type: 'user' });
     if (chats[currentChatId].title === "新しい会話") chats[currentChatId].title = text.substring(0, 15);
     
     addMsgToUI(text, 'user');
     input.value = "";
 
-    // AI返信シミュレーション (制限解除後に fetch に差し替え)
-    const batch = parseInt(document.getElementById('batchSelect').value);
-    const personality = document.getElementById('personalityInput').value || "標準";
-    const length = document.getElementById('lengthSelect').value;
-
-    const group = document.createElement('div');
-    group.className = `response-group ${batch == 2 ? 'grid-2' : batch == 4 ? 'grid-4' : ''}`;
-    document.getElementById('chat-box').appendChild(group);
-
-    for (let i = 0; i < batch; i++) {
-      const aiText = `【${personality}】モードでの回答(${i+1}): \nこれは${length}文字設定のシミュレーション回答です。制限が明けたら本物のAIがここに現れます。`;
-      chats[currentChatId].messages.push({ text: aiText, type: 'ai' });
-      addMsgToUI(aiText, 'ai', group);
-    }
+    // モック返信 (コードが含まれる場合を想定)
+    const aiText = "承知しました。以下のコードをご確認ください。```\nconsole.log('honeylemonai');\n```";
+    chats[currentChatId].messages.push({ text: aiText, type: 'ai' });
+    addMsgToUI(aiText, 'ai');
     
-    saveToStorage();
-    renderHistory();
+    saveAndRender();
   }
 
-  // 初期化
-  if (Object.keys(chats).length > 0) {
-    loadChat(Object.keys(chats).reverse()[0]);
-  } else {
-    createNewChat();
-  }
+  if (Object.keys(chats).length > 0) loadChat(Object.keys(chats).reverse()[0]); else createNewChat();
 </script>
 </body>
 </html>
