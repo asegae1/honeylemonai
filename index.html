@@ -3,89 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <title>HoneyLemonAI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fffef2; color: #333; }
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo-text { font-size: 2.2em; font-weight: 800; color: #f1c40f; border-bottom: 4px solid #f1c40f; padding-bottom: 5px; display: inline-block; }
+        :root { --main-yellow: #f1c40f; --bg-cream: #fffef2; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: var(--bg-cream); color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 4px solid var(--main-yellow); padding-bottom: 10px; }
+        .header h1 { margin: 0; color: var(--main-yellow); font-weight: 900; letter-spacing: 1px; }
         
-        /* 応答エリアをコードが見やすいように広めに設定 */
-        #output { 
-            background: #ffffff; padding: 20px; min-height: 300px; margin: 20px 0; 
-            border-radius: 15px; border: 1px solid #eee; box-shadow: 0 5px 15px rgba(241, 196, 15, 0.1); 
-            white-space: pre-wrap; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px;
-            overflow-x: auto;
-        }
+        /* チャット表示エリア */
+        #chat-window { background: white; border-radius: 15px; border: 1px solid #eee; height: 500px; overflow-y: auto; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(241, 196, 15, 0.1); }
+        .msg { margin-bottom: 20px; padding: 15px; border-radius: 10px; line-height: 1.6; }
+        .ai-msg { background: #fdfdfd; border-left: 5px solid var(--main-yellow); }
+        .user-msg { background: #f9f0c3; margin-left: 50px; }
 
-        #progress-container { width: 100%; background: #eee; border-radius: 10px; margin: 10px 0; display: none; }
-        #progress-bar { width: 0%; height: 10px; background: #f1c40f; border-radius: 10px; transition: width 0.3s; }
+        /* 入力エリア */
+        .input-group { display: flex; gap: 10px; }
+        textarea { flex: 1; height: 80px; border: 2px solid #eee; border-radius: 10px; padding: 12px; font-size: 16px; outline: none; transition: 0.3s; }
+        textarea:focus { border-color: var(--main-yellow); }
+        button { width: 100px; background: var(--main-yellow); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #ccc; }
 
-        textarea { width: 100%; height: 120px; border: 2px solid #f9f0c3; border-radius: 12px; padding: 15px; box-sizing: border-box; outline: none; font-size: 16px; font-family: sans-serif; }
-        button { width: 100%; padding: 15px; background: #f1c40f; color: #fff; border: none; border-radius: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; font-size: 18px; }
-        button:disabled { background: #e0e0e0; cursor: not-allowed; }
+        /* ローディングバー */
+        #loading { display: none; margin-bottom: 10px; }
+        .bar { width: 100%; background: #eee; height: 8px; border-radius: 4px; overflow: hidden; }
+        .fill { width: 0%; height: 100%; background: var(--main-yellow); transition: 0.3s; }
     </style>
 </head>
 <body>
-    <div class="logo-container"><div class="logo-text">HoneyLemonAI</div></div>
-    
-    <div id="progress-container"><div id="progress-bar"></div></div>
-    <div id="output">複雑なタスク（Code等）に対応するため、知能データを読み込んでいます...</div>
 
-    <textarea id="input" placeholder="例：HTMLでボタンを作るコードを書いて..."></textarea>
-    <button id="sendBtn" disabled>Loading...</button>
+<div class="header"><h1>HoneyLemonAI</h1></div>
 
-    <script type="module">
-        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.1';
+<div id="loading">
+    <div style="font-size: 12px; margin-bottom: 5px;">脳データを同期中...</div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+</div>
 
-        let generator;
-        const outputDiv = document.getElementById('output');
-        const sendBtn = document.getElementById('sendBtn');
-        const progressBar = document.getElementById('progress-bar');
-        const progressContainer = document.getElementById('progress-container');
+<div id="chat-window">
+    <div class="msg ai-msg">こんにちは。HoneyLemonAIです。コードの作成から複雑な質問まで、日本語でお手伝いします。</div>
+</div>
 
-        async function init() {
-            try {
-                progressContainer.style.display = 'block';
-                // プログラミングに強いQwenの軽量版を採用
-                generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
-                    device: 'wasm',
-                    progress_callback: (data) => {
-                        if (data.status === 'progress') {
-                            progressBar.style.width = data.progress + '%';
-                        }
-                    }
-                });
-                outputDiv.innerText = "準備完了。コード生成や複雑な質問もどうぞ。";
-                sendBtn.disabled = false;
-                sendBtn.innerText = "送信";
-                progressContainer.style.display = 'none';
-            } catch (e) {
-                outputDiv.innerText = "エラー: " + e.message;
-            }
+<div class="input-group">
+    <textarea id="input" placeholder="ここに質問を入力..."></textarea>
+    <button id="sendBtn" disabled>待機中</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script type="module">
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.1';
+
+    let generator;
+    const chatWin = document.getElementById('chat-window');
+    const sendBtn = document.getElementById('sendBtn');
+    const fill = document.getElementById('fill');
+    const loading = document.getElementById('loading');
+
+    async function init() {
+        loading.style.display = 'block';
+        try {
+            generator = await pipeline('text-generation', 'onnx-community/Qwen2.5-0.5B-Instruct', {
+                device: 'wasm',
+                progress_callback: (d) => { if(d.status==='progress') fill.style.width = d.progress + '%'; }
+            });
+            loading.style.display = 'none';
+            sendBtn.innerText = "送信";
+            sendBtn.disabled = false;
+        } catch (e) { alert("起動失敗: " + e.message); }
+    }
+
+    async function ask() {
+        const text = document.getElementById('input').value;
+        if(!text || sendBtn.disabled) return;
+        
+        // ユーザー表示
+        const uMsg = document.createElement('div');
+        uMsg.className = 'msg user-msg';
+        uMsg.innerText = text;
+        chatWin.appendChild(uMsg);
+        document.getElementById('input').value = '';
+        
+        // AI応答枠
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'msg ai-msg';
+        aiMsg.innerText = "考え中...";
+        chatWin.appendChild(aiMsg);
+        chatWin.scrollTop = chatWin.scrollHeight;
+
+        sendBtn.disabled = true;
+
+        try {
+            // 日本語で答えるよう強く指示
+            const prompt = `User: ${text}\nAssistant (Please answer in Japanese):`;
+            const output = await generator(prompt, { max_new_tokens: 512, temperature: 0.5 });
+            
+            let result = output[0].generated_text.split("Assistant (Please answer in Japanese):")[1] || output[0].generated_text;
+            aiMsg.innerHTML = result.replace(/```([\s\S]*?)```/g, '<pre><code class="language-javascript">$1</code></pre>');
+            Prism.highlightAllUnder(aiMsg);
+        } catch (e) {
+            aiMsg.innerText = "ごめんなさい、エラーが発生しました。";
+        } finally {
+            sendBtn.disabled = false;
+            chatWin.scrollTop = chatWin.scrollHeight;
         }
+    }
 
-        window.ask = async () => {
-            const text = document.getElementById('input').value;
-            if(!text) return;
-            sendBtn.disabled = true;
-            sendBtn.innerText = "解析中...";
-            outputDiv.innerText = "HoneyLemonAI がコードを生成しています...";
-
-            try {
-                const output = await generator([{ role: "user", content: text }], { 
-                    max_new_tokens: 512, // コード用に長めの出力を許可
-                    temperature: 0.7 
-                });
-                outputDiv.innerText = output[0].generated_text.at(-1).content;
-            } catch (err) {
-                outputDiv.innerText = "生成中にエラーが発生しました。";
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.innerText = "送信";
-            }
-        };
-
-        sendBtn.onclick = window.ask;
-        init();
-    </script>
+    sendBtn.onclick = ask;
+    init();
+</script>
 </body>
 </html>
