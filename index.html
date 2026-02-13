@@ -2,130 +2,115 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HoneyLemonAI Pro</title>
     <style>
         :root { --bg: #ffffff; --txt: #1f1f1f; --blue: #1a73e8; --lemon: #f1c40f; --side: #f8f9fa; --border: #ddd; }
         [data-theme="black"] { --bg: #131314; --txt: #e3e3e3; --side: #1e1f20; --border: #444; }
         body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--txt); }
-        
-        /* サイドバー */
-        .sidebar { width: 260px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
-        .hl-name { color: var(--lemon); font-weight: bold; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
-        textarea, .secret-input { width: 100%; background: var(--bg); color: var(--txt); border: 1px solid var(--border); border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 0.85rem; }
-        .secret-input { border: 1px dashed #ff4081; }
-
-        /* メインエリア */
-        .main { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .sidebar { width: 240px; background: var(--side); padding: 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
+        .logo { font-weight: bold; color: var(--lemon); font-size: 1.2rem; }
+        .main { flex: 1; display: flex; flex-direction: column; max-width: 900px; margin: 0 auto; width: 100%; }
         #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { line-height: 1.7; white-space: pre-wrap; padding: 12px 18px; border-radius: 15px; max-width: 85%; font-size: 0.95rem; }
-        .user { align-self: flex-end; background: var(--blue); color: white; border-bottom-right-radius: 2px; }
-        .ai { align-self: flex-start; background: var(--side); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-        .gen-img { width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid var(--border); display: block; }
-
-        /* 入力エリア */
+        .msg { line-height: 1.6; padding: 12px 16px; border-radius: 12px; max-width: 85%; word-wrap: break-word; }
+        .user { align-self: flex-end; background: var(--blue); color: white; }
+        .ai { align-self: flex-start; background: var(--side); border: 1px solid var(--border); }
+        .gen-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; border: 1px solid var(--border); }
         .input-area { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg); }
-        #in { flex: 1; padding: 14px 22px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--side); color: var(--txt); font-size: 1rem; }
-        .btn { padding: 0 20px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        #in { flex: 1; padding: 12px 20px; border-radius: 30px; border: 1px solid var(--border); background: var(--side); color: var(--txt); outline: none; }
+        .btn { padding: 0 20px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; }
         .btn-text { background: var(--blue); color: white; }
-        .btn-img { background: var(--lemon); color: #1f1f1f; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-img { background: var(--lemon); color: #111; }
     </style>
 </head>
 <body>
 
 <aside class="sidebar">
-    <div class="hl-name">HoneyLemonAI</div>
-    <label style="font-size: 0.75rem; font-weight: bold;">表の性格設定</label>
-    <textarea id="persona">非常に論理的で優秀なアシスタント。簡潔に回答せよ。</textarea>
-    
-    <label style="font-size: 0.75rem; font-weight: bold; color: #ff4081;">隠し性格設定（SECRET）</label>
-    <textarea id="secret" class="secret-input" placeholder="ここに入力した指示が最優先されます..."></textarea>
-
-    <label style="font-size: 0.75rem; font-weight: bold; margin-top: 10px;">テーマ切替</label>
-    <select onchange="document.documentElement.setAttribute('data-theme', this.value)" style="padding: 5px;">
-        <option value="light">ライトモード</option>
-        <option value="black">ダークモード</option>
+    <div class="logo">HoneyLemonAI</div>
+    <p style="font-size:0.7rem; color:#888;">Mode: Secure v3.5</p>
+    <select onchange="document.documentElement.setAttribute('data-theme', this.value)" style="margin-top:10px;">
+        <option value="light">ライト</option>
+        <option value="black">ブラック</option>
     </select>
-    <button style="margin-top: auto; padding: 8px; border-radius: 5px; cursor: pointer;" onclick="clearHistory()">履歴を削除</button>
+    <button style="margin-top:auto; padding:5px;" onclick="localStorage.clear();location.reload();">履歴削除</button>
 </aside>
 
 <main class="main">
     <div id="chat"></div>
     <div class="input-area">
-        <input type="text" id="in" placeholder="メッセージ、または画像のお題..." onkeypress="if(event.key==='Enter')sendText()">
-        <button class="btn btn-text" id="b1" onclick="sendText()">送信</button>
-        <button class="btn btn-img" id="b2" onclick="fetchImage()">独創的生成</button>
+        <input type="text" id="in" placeholder="メッセージを入力..." onkeypress="if(event.key==='Enter')sendText()">
+        <button class="btn btn-text" onclick="sendText()">送信</button>
+        <button class="btn btn-img" onclick="fetchImage()">画像生成</button>
     </div>
 </main>
 
 <script>
-    let busy = false;
-
-    window.onload = () => {
-        const h = localStorage.getItem('hl_pro_history');
-        if (h) { document.getElementById('chat').innerHTML = h; scroll(); }
-    };
-
-    function getFullPrompt() {
-        const p = document.getElementById('persona').value;
-        const s = document.getElementById('secret').value;
-        return `【絶対遵守】メタ発言禁止。日本語のみ。論理性を保て。
-                【メイン設定】${p}
-                ${s ? `【最優先指令】${s}` : ''}`;
-    }
+    let isBusy = false;
+    let secretMode = ""; // 隠し性格を保持する変数
 
     async function sendText() {
         const input = document.getElementById('in');
         const text = input.value.trim();
-        if (!text || busy) return;
+        if (!text || isBusy) return;
 
-        busy = true; lock(true);
+        // 【隠し性格のトリガー】 /secret:性格名 の形式で入力すると隠し性格がセットされる
+        if (text.startsWith("/secret:")) {
+            secretMode = text.replace("/secret:", "");
+            render("シークレットプロンプトを適用しました。", "ai");
+            input.value = "";
+            return;
+        }
+
         render(text, 'user');
         input.value = '';
-        const aiMsg = render("思考中...", 'ai');
+        const aiMsg = render("...", 'ai');
+        isBusy = true;
+
+        const systemPrompt = `論理的なアシスタント。${secretMode ? "【最優先】" + secretMode : ""}`;
 
         try {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: text, systemPrompt: getFullPrompt() })
+                body: JSON.stringify({ prompt: text, systemPrompt: systemPrompt })
             });
             const data = await res.json();
             aiMsg.innerText = data.choices[0].message.content;
-            save();
         } catch (e) {
-            aiMsg.innerText = "エラー：通信に失敗しました。";
+            aiMsg.innerText = "エラー: 応答を取得できません。";
         } finally {
-            busy = false; lock(false); scroll();
+            isBusy = false;
+            scroll();
         }
     }
 
     async function fetchImage() {
         const input = document.getElementById('in');
         const text = input.value.trim();
-        if (!text || busy) return;
+        if (!text || isBusy) return;
 
-        busy = true; lock(true);
-        render(text + " を生成中...", 'user');
+        render(text + "（生成中）", 'user');
         input.value = '';
-        const aiMsg = render("独創的なイメージを構築しています...", 'ai');
+        const aiMsg = render("AIが独創的な絵を生成しています...", 'ai');
+        isBusy = true;
 
-        const seed = Math.floor(Math.random() * 999999);
-        const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(text)}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
+        // Vercelの /api/image を経由して Pollinations AI に接続
+        const seed = Math.floor(Math.random() * 1000000);
+        const imageUrl = `/api/image?prompt=${encodeURIComponent(text)}&seed=${seed}`;
         
         const img = document.createElement('img');
         img.className = 'gen-img';
-        img.src = imgUrl;
+        img.src = imageUrl;
 
         img.onload = () => {
-            aiMsg.innerText = "生成完了：";
+            aiMsg.innerText = "生成が完了しました：";
             aiMsg.appendChild(img);
-            busy = false; lock(false); save(); scroll();
+            isBusy = false;
+            scroll();
         };
+
         img.onerror = () => {
-            aiMsg.innerText = "生成失敗。サーバーを確認してください。";
-            busy = false; lock(false);
+            aiMsg.innerText = "生成に失敗しました。Vercelの /api/image.js を確認してください。";
+            isBusy = false;
         };
     }
 
@@ -138,10 +123,7 @@
         return d;
     }
 
-    function lock(s) { document.getElementById('b1').disabled = s; document.getElementById('b2').disabled = s; }
-    function save() { localStorage.setItem('hl_pro_history', document.getElementById('chat').innerHTML); }
     function scroll() { const c = document.getElementById('chat'); c.scrollTop = c.scrollHeight; }
-    function clearHistory() { if(confirm("消去しますか？")){ localStorage.clear(); location.reload(); } }
 </script>
 </body>
 </html>
