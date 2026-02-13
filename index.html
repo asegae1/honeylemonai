@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>honeylemonai - Pro Studio</title>
+  <title>HoneyLemonAI</title>
   <style>
     /* 1. 変数と基本設定 */
     :root { 
@@ -73,7 +73,7 @@
 
 <div class="sidebar">
   <div class="sidebar-header">
-    <span>honeylemonai</span>
+    <span>honeyLemonAI</span>
     <button onclick="document.body.classList.toggle('dark')" style="background:none; border:none; cursor:pointer;"><div class="icon-moon"></div></button>
   </div>
   <button class="new-btn" onclick="createNewChat()">
@@ -86,15 +86,15 @@
   <div class="top-nav">
     <div class="settings-grid">
       <div class="field-group" style="flex: 0.5;">
-        <span class="label">LANGUAGE</span>
+        <span class="label">言語(LANGUAGE)</span>
         <select id="langSelect"><option value="ja">日本語</option><option value="en">English</option></select>
       </div>
       <div class="field-group" style="flex: 2;">
-        <span class="label">AI PERSONALITY</span>
+        <span class="label">性格(AIPERSONALITY)</span>
         <input type="text" id="personalityInput" placeholder="性格を自由に記述...">
       </div>
       <div class="field-group" style="flex: 1.5;">
-        <span class="label">LENGTH: <span id="lenVal">1000</span> chars</span>
+        <span class="label">レート数(LENGTH): <span id="lenVal">1000</span> chars</span>
         <input type="range" id="lengthSelect" min="1000" max="7500" step="100" value="1000" oninput="document.getElementById('lenVal').innerText=this.value">
       </div>
       <div class="field-group" style="flex: 0.5;">
