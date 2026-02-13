@@ -1,31 +1,29 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  const { prompt } = req.query;
+  const apiKey = process.env.PEXELS_API_KEY;
+
+  // Pexels API (日本語より英語の方がヒットしやすいため、簡易翻訳を入れるのが理想ですがそのままでも動きます)
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(prompt)}&per_page=15`;
 
   try {
-    // リクエストが文字列ならパースし、オブジェクトならそのまま使う
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const { prompt, model, systemPrompt, maxTokens } = body;
-
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model || 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: parseInt(maxTokens) || 1000
-      })
+    const response = await fetch(url, {
+      headers: { 'Authorization': apiKey }
     });
+    const data = await response.json();
 
-    const data = await groqRes.json();
-    res.status(200).json(data);
-  } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: error.message });
+    if (data.photos && data.photos.length > 0) {
+      // ランダムに1枚選ぶ
+      const photo = data.photos[Math.floor(Math.random() * data.photos.length)];
+      const imageUrl = photo.src.large; // または original, large2x
+
+      const imgRes = await fetch(imageUrl);
+      const arrayBuffer = await imgRes.arrayBuffer();
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.send(Buffer.from(arrayBuffer));
+    } else {
+      res.status(404).send('No images found');
+    }
+  } catch (e) {
+    res.status(500).send('Pexels API Error');
   }
 }
